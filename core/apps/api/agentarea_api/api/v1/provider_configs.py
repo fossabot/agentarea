@@ -2,6 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from agentarea_api.api.deps.services import get_provider_service  # type: ignore
+from agentarea_common.auth.dependencies import UserContextDep
 from agentarea_llm.application.provider_service import ProviderService  # type: ignore
 from agentarea_llm.domain.models import ProviderConfig  # type: ignore
 from fastapi import APIRouter, Depends, HTTPException
@@ -41,9 +42,16 @@ class ProviderConfigResponse(BaseModel):
     # Related data
     provider_spec_name: str | None = None
     provider_spec_key: str | None = None
+    model_instance_ids: list[str] = []
 
     @classmethod
     def from_domain(cls, provider_config: ProviderConfig) -> "ProviderConfigResponse":
+        # Extract model instance IDs from the relationship if loaded
+        # Always return a list (empty if no model instances)
+        model_instance_ids: list[str] = []
+        if hasattr(provider_config, "model_instances") and provider_config.model_instances is not None:
+            model_instance_ids = [str(instance.model_spec_id) for instance in provider_config.model_instances]
+
         return cls(
             id=str(provider_config.id),
             provider_spec_id=str(provider_config.provider_spec_id),
@@ -61,6 +69,7 @@ class ProviderConfigResponse(BaseModel):
             provider_spec_key=provider_config.provider_spec.provider_key
             if hasattr(provider_config, "provider_spec") and provider_config.provider_spec
             else None,
+            model_instance_ids=model_instance_ids,
         )
 
 
@@ -159,6 +168,7 @@ class ProviderConfigWithInstancesResponse(BaseModel):
 @router.post("/", response_model=ProviderConfigResponse)
 async def create_provider_config(
     data: ProviderConfigCreate,
+    user_context: UserContextDep,
     provider_service: ProviderService = Depends(get_provider_service),
 ):
     """Create a new provider configuration."""
@@ -174,6 +184,7 @@ async def create_provider_config(
 
 @router.get("/", response_model=list[ProviderConfigResponse])
 async def list_provider_configs(
+    user_context: UserContextDep,
     provider_spec_id: UUID | None = None,
     is_active: bool | None = None,
     provider_service: ProviderService = Depends(get_provider_service),
@@ -188,6 +199,7 @@ async def list_provider_configs(
 
 @router.get("/with-instances", response_model=list[ProviderConfigResponse])
 async def list_provider_configs_with_instances(
+    user_context: UserContextDep,
     provider_spec_id: UUID | None = None,
     is_active: bool | None = None,
     provider_service: ProviderService = Depends(get_provider_service),
@@ -203,6 +215,7 @@ async def list_provider_configs_with_instances(
 @router.get("/{config_id}", response_model=ProviderConfigResponse)
 async def get_provider_config(
     config_id: UUID,
+    user_context: UserContextDep,
     provider_service: ProviderService = Depends(get_provider_service),
 ):
     """Get a specific provider configuration."""
@@ -216,6 +229,7 @@ async def get_provider_config(
 async def update_provider_config(
     config_id: UUID,
     data: ProviderConfigUpdate,
+    user_context: UserContextDep,
     provider_service: ProviderService = Depends(get_provider_service),
 ):
     """Update a provider configuration."""
@@ -234,6 +248,7 @@ async def update_provider_config(
 @router.delete("/{config_id}")
 async def delete_provider_config(
     config_id: UUID,
+    user_context: UserContextDep,
     provider_service: ProviderService = Depends(get_provider_service),
 ):
     """Delete a provider configuration."""
@@ -247,6 +262,7 @@ async def delete_provider_config(
 @router.get("/admin/{provider_key}/logo")
 async def get_provider_logo(
     provider_key: str,
+    user_context: UserContextDep,
     provider_service: ProviderService = Depends(get_provider_service),
 ):
     """Get provider logo via admin route pattern."""

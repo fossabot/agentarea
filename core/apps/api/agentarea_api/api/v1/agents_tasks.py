@@ -10,9 +10,12 @@ from agentarea_agents.application.temporal_workflow_service import (
 )
 from agentarea_api.api.deps.services import (
     get_agent_service,
+    get_event_stream_service,
     get_task_service,
     get_temporal_workflow_service,
 )
+from agentarea_common.auth.dependencies import UserContextDep
+from agentarea_common.events.event_stream_service import EventStreamService
 from agentarea_tasks.task_service import TaskService
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -96,6 +99,7 @@ class TaskWithAgent(BaseModel):
 
 @global_tasks_router.get("/", response_model=list[TaskWithAgent])
 async def get_all_tasks(
+    user_context: UserContextDep,
     status: str | None = Query(None, description="Filter by task status"),
     created_by: str | None = Query(
         None, description="Filter by creator: 'me' for current user's tasks only"
@@ -199,8 +203,10 @@ class TaskSSEEvent(BaseModel):
 async def create_task_for_agent_with_stream(
     agent_id: UUID,
     data: TaskCreate,
+    user_context: UserContextDep,
     task_service: TaskService = Depends(get_task_service),
     agent_service: AgentService = Depends(get_agent_service),
+    event_stream_service: EventStreamService = Depends(get_event_stream_service),
 ):
     """Create and execute a task for the specified agent with real-time SSE stream."""
     # Verify agent exists
@@ -227,6 +233,7 @@ async def create_task_for_agent_with_stream(
             task = await task_service.create_and_execute_task_with_workflow(
                 agent_id=agent_id,
                 description=data.description,
+                workspace_id=user_context.workspace_id,
                 parameters=data.parameters,
                 user_id=data.user_id,
                 enable_agent_communication=data.enable_agent_communication or True,
@@ -247,9 +254,9 @@ async def create_task_for_agent_with_stream(
                 },
             )
 
-            # If workflow started successfully, stream events from task service
+            # If workflow started successfully, stream events from event stream service
             if task.execution_id and task.status in ["running", "pending"]:
-                async for event in task_service.stream_task_events(task.id, include_history=False):
+                async for event in event_stream_service.stream_events_for_task(task.id, event_patterns=["workflow.*"]):
                     # Convert task service event to SSE format
                     event_type = event.get("event_type", "task_event")
 
@@ -333,6 +340,7 @@ async def create_task_for_agent_with_stream(
 async def create_task_for_agent_sync(
     agent_id: UUID,
     data: TaskCreate,
+    user_context: UserContextDep,
     task_service: TaskService = Depends(get_task_service),
 ):
     """Create and execute a task for the specified agent (synchronous response)."""
@@ -341,6 +349,7 @@ async def create_task_for_agent_sync(
         task = await task_service.create_and_execute_task_with_workflow(
             agent_id=agent_id,
             description=data.description,
+            workspace_id=user_context.workspace_id,
             parameters=data.parameters,
             user_id=data.user_id,
             enable_agent_communication=data.enable_agent_communication or True,
@@ -372,6 +381,7 @@ async def create_task_for_agent_sync(
 @router.get("/", response_model=list[TaskResponse])
 async def list_agent_tasks(
     agent_id: UUID,
+    user_context: UserContextDep,
     status: str | None = Query(None, description="Filter by task status"),
     created_by: str | None = Query(
         None, description="Filter by creator: 'me' for current user's tasks only"
@@ -438,6 +448,7 @@ async def list_agent_tasks(
 async def get_agent_task(
     agent_id: UUID,
     task_id: UUID,
+    user_context: UserContextDep,
     agent_service: AgentService = Depends(get_agent_service),
     workflow_task_service: TemporalWorkflowService = Depends(get_temporal_workflow_service),
 ):
@@ -480,6 +491,7 @@ async def get_agent_task(
 async def get_agent_task_status(
     agent_id: UUID,
     task_id: UUID,
+    user_context: UserContextDep,
     agent_service: AgentService = Depends(get_agent_service),
     workflow_task_service: TemporalWorkflowService = Depends(get_temporal_workflow_service),
 ):
@@ -519,6 +531,7 @@ async def get_agent_task_status(
 async def cancel_agent_task(
     agent_id: UUID,
     task_id: UUID,
+    user_context: UserContextDep,
     agent_service: AgentService = Depends(get_agent_service),
     workflow_task_service: TemporalWorkflowService = Depends(get_temporal_workflow_service),
 ):
@@ -548,6 +561,7 @@ async def cancel_agent_task(
 async def pause_agent_task(
     agent_id: UUID,
     task_id: UUID,
+    user_context: UserContextDep,
     agent_service: AgentService = Depends(get_agent_service),
     workflow_task_service: TemporalWorkflowService = Depends(get_temporal_workflow_service),
 ):
@@ -600,6 +614,7 @@ async def pause_agent_task(
 async def resume_agent_task(
     agent_id: UUID,
     task_id: UUID,
+    user_context: UserContextDep,
     agent_service: AgentService = Depends(get_agent_service),
     workflow_task_service: TemporalWorkflowService = Depends(get_temporal_workflow_service),
 ):
@@ -655,6 +670,7 @@ async def resume_agent_task(
 async def get_task_events(
     agent_id: UUID,
     task_id: UUID,
+    user_context: UserContextDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Number of events per page"),
     event_type: str | None = Query(None, description="Filter by event type"),
@@ -745,8 +761,10 @@ async def get_task_events(
 async def stream_task_events(
     agent_id: UUID,
     task_id: UUID,
+    user_context: UserContextDep,
     agent_service: AgentService = Depends(get_agent_service),
     task_service: TaskService = Depends(get_task_service),
+    event_stream_service: EventStreamService = Depends(get_event_stream_service),
 ):
     """Stream real-time task execution events via Server-Sent Events."""
     # Verify agent exists
@@ -776,8 +794,8 @@ async def stream_task_events(
                     },
                 )
 
-                # Stream events from task service
-                async for event in task_service.stream_task_events(task_id, include_history=True):
+                # Stream events from event stream service
+                async for event in event_stream_service.stream_events_for_task(task_id, event_patterns=["workflow.*"]):
                     # Use protocol event structure directly - task service already formats it properly
                     event_type = event.get("event_type", "task_event")
 

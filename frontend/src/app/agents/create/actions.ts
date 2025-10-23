@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { createAgent } from '@/lib/api';
 import { z } from 'zod';

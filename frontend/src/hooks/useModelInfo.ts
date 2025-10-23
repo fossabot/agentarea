@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getModelSpec, listModelSpecs } from '@/lib/api';
-import { ModelSpec } from '@/types/provider';
+import { getModelSpec, listModelSpecs } from '@/lib/browser-api';
 
 export interface ModelInfo {
   displayName: string;
@@ -112,4 +111,4 @@ export const useModelInfo = (modelId: string | null | undefined): ModelInfo => {
   }, [modelId]);
 
   return modelInfo;
-}; 
+};

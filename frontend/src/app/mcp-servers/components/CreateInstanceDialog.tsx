@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
-import { createMCPServerInstance, checkMCPServerInstanceConfiguration } from "@/lib/api";
+import { checkMCPServerInstanceConfiguration } from "@/lib/browser-api";
+import { createMCPServerInstance } from "../actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MCPInstanceConfigForm } from "@/components/MCPInstanceConfigForm";
@@ -103,9 +104,10 @@ export function CreateInstanceDialog({ open, onOpenChange, mcpServer }: CreateIn
                 if (checkResult.error) {
                   toast.error('Failed to validate configuration');
                 } else {
-                  setValidationResult(checkResult.data);
-                  if (checkResult.data.valid) toast.success('Configuration is valid!');
-                  else toast.warning(`Configuration has ${checkResult.data.errors.length} error(s)`);
+                  const validationData = checkResult.data as any;
+                  setValidationResult(validationData);
+                  if (validationData?.valid) toast.success('Configuration is valid!');
+                  else toast.warning(`Configuration has ${validationData?.errors?.length || 0} error(s)`);
                 }
               } catch (error) {
                 console.error('Validation error:', error);

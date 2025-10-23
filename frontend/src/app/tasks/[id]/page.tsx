@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { getAgentTaskStatus, pauseAgentTask, resumeAgentTask, cancelAgentTask } from "@/lib/api";
+import { getAgentTaskStatus, pauseAgentTask, resumeAgentTask, cancelAgentTask } from "@/lib/browser-api";
 import { toast } from "sonner";
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import ContentBlock from "@/components/ContentBlock";
@@ -123,7 +123,7 @@ export default function TaskDetailsPage() {
       // given the current API structure.
       
       // First, get all tasks to find the one with matching ID
-      const { getAllTasks } = await import("@/lib/api");
+      const { getAllTasks } = await import("@/lib/browser-api");
       const { data: allTasks, error: tasksError } = await getAllTasks();
       
       if (tasksError || !allTasks) {
@@ -241,7 +241,7 @@ export default function TaskDetailsPage() {
       const { error } = await cancelAgentTask(task.agent_id, task.id);
       
       if (error) {
-        const errorMessage = error.detail?.[0]?.msg || "An error occurred while cancelling the task";
+        const errorMessage = error.detail?.[0]?.msg || (error as any).message || "An error occurred while cancelling the task";
         toast.error("Failed to cancel task", {
           description: errorMessage
         });
