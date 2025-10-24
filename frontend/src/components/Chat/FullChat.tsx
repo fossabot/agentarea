@@ -199,6 +199,35 @@ export default function FullChat({
   }, [checkForUserMessages]); // Add checkForUserMessages to dependencies
 
   // Handle SSE events
+  // Normalize event types to UI-friendly canonical names and use them across FullChat event handling.
+  const normalizeEventType = (type: string): string => {
+    const key = (type || '').toLowerCase().replace(/[^a-z]/g, '');
+    const map: Record<string, string> = {
+      // workflow core
+      workflowstarted: 'WorkflowStarted',
+      workflowcompleted: 'WorkflowCompleted',
+      workflowfailed: 'WorkflowFailed',
+      workflowcancelled: 'WorkflowCancelled',
+      started: 'WorkflowStarted',
+      completed: 'WorkflowCompleted',
+      failed: 'WorkflowFailed',
+      cancelled: 'WorkflowCancelled',
+      // llm
+      llmcallstarted: 'LLMCallStarted',
+      llmcallcompleted: 'LLMCallCompleted',
+      llmcallfailed: 'LLMCallFailed',
+      llmcallchunk: 'LLMCallChunk',
+      // tool
+      toolcallstarted: 'ToolCallStarted',
+      toolcallcompleted: 'ToolCallCompleted',
+      toolcallfailed: 'ToolCallFailed',
+      // task-level aliases
+      taskcompleted: 'WorkflowCompleted',
+      taskfailed: 'WorkflowFailed',
+      taskcancelled: 'WorkflowCancelled',
+    };
+    return map[key] || type.replace('workflow.', '');
+  };
   const handleSSEMessage = useCallback((event: { type: string; data: any }) => {
     // Get the actual event type from the data if available
     const actualEventType = event.data?.event_type || event.data?.original_event_type || event.type;
@@ -209,8 +238,8 @@ export default function FullChat({
       return;
     }
     
-    // Remove workflow prefix if present
-    const cleanEventType = actualEventType.replace('workflow.', '');
+    // Normalize to canonical event type
+    const cleanEventType = normalizeEventType(actualEventType);
     
     // Check if this event should create a visible message
     if (!shouldDisplayEvent(cleanEventType)) {
@@ -408,7 +437,7 @@ export default function FullChat({
         // All other events are handled by the message parsing above
         break;
     }
-  }, [agent.id]); // Remove dependencies that cause frequent recreation
+  }, [agent.id]);
 
   // SSE event handlers
   const handleSSEError = useCallback((error: Event) => {

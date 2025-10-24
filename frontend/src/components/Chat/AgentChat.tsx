@@ -184,24 +184,90 @@ export default function AgentChat({
 
   // Handle SSE events
   const handleSSEMessage = useCallback((event: { type: string; data: any }) => {
-    // Get the actual event type from the data if available
+    // Normalize event types to UI-friendly canonical names
+    const normalizeEventType = (type: string): string => {
+      const key = (type || '').toLowerCase().replace(/[^a-z]/g, '');
+      const map: Record<string, string> = {
+        // workflow core
+        workflowstarted: 'WorkflowStarted',
+        workflowcompleted: 'WorkflowCompleted',
+        workflowfailed: 'WorkflowFailed',
+        workflowcancelled: 'WorkflowCancelled',
+        started: 'WorkflowStarted',
+        completed: 'WorkflowCompleted',
+        failed: 'WorkflowFailed',
+        cancelled: 'WorkflowCancelled',
+        // llm
+        llmcallstarted: 'LLMCallStarted',
+        llmcallcompleted: 'LLMCallCompleted',
+        llmcallfailed: 'LLMCallFailed',
+        llmcallchunk: 'LLMCallChunk',
+        // tool
+        toolcallstarted: 'ToolCallStarted',
+        toolcallcompleted: 'ToolCallCompleted',
+        toolcallfailed: 'ToolCallFailed',
+        // task-level aliases
+        taskcompleted: 'WorkflowCompleted',
+        taskfailed: 'WorkflowFailed',
+        taskcancelled: 'WorkflowCancelled',
+      };
+      return map[key] || type.replace('workflow.', '');
+    };
+
     const actualEventType = event.data?.event_type || event.data?.original_event_type || event.type;
     
-    // Handle generic "message" events that might be heartbeats or connection events
     if (actualEventType === 'message' && !event.data?.event_type) {
-      // This is likely a heartbeat or connection event - just return
       return;
     }
-    
-    // Remove workflow prefix if present
-    const cleanEventType = actualEventType.replace('workflow.', '');
-    
-    // Check if this event should create a visible message
+
+    // Normalize to canonical event type
+    const cleanEventType = normalizeEventType(actualEventType);
+
     if (!shouldDisplayEvent(cleanEventType)) {
       return;
     }
 
-    // Special handling for chunk events - accumulate instead of creating new messages
+    // Tool started: add placeholder message to be replaced later
+    if (cleanEventType === 'ToolCallStarted') {
+      const placeholder = parseEventToMessage(cleanEventType, event.data);
+      if (placeholder) {
+        setMessages(prev => [...prev, placeholder]);
+      }
+      return;
+    }
+
+    // Tool completed: replace the last matching ToolCallStarted message
+    if (cleanEventType === 'ToolCallCompleted') {
+      const originalData = event.data.original_data || event.data;
+      const toolName = originalData.tool_name || event.data.tool_name;
+      const toolCallId = originalData.tool_call_id || event.data.tool_call_id;
+
+      setMessages(prev => {
+        const lastToolCallIndex = [...prev].reverse().findIndex(msg => 
+          'type' in msg && msg.type === 'tool_call_started' && 
+          msg.data.tool_name === toolName && msg.data.tool_call_id === toolCallId
+        );
+
+        if (lastToolCallIndex !== -1) {
+          const indexFromStart = prev.length - 1 - lastToolCallIndex;
+          const resultMessage = parseEventToMessage(cleanEventType, event.data);
+          if (resultMessage) {
+            const newMessages = [...prev];
+            newMessages[indexFromStart] = resultMessage;
+            return newMessages;
+          }
+        } else {
+          const resultMessage = parseEventToMessage(cleanEventType, event.data);
+          if (resultMessage) {
+            return [...prev, resultMessage];
+          }
+        }
+        return prev;
+      });
+      return;
+    }
+
+    // LLM chunk: accumulate streaming content
     if (cleanEventType === 'LLMCallChunk') {
       const originalData = event.data.original_data || event.data;
       const chunk = originalData.chunk || event.data.chunk;
@@ -211,46 +277,31 @@ export default function AgentChat({
 
       setMessages(prev => {
         const lastMessage = prev[prev.length - 1];
-        
-        // If the last message is a streaming message from the same task, append to it
-        if (lastMessage && 
-            'type' in lastMessage && 
-            lastMessage.type === 'llm_chunk' &&
-            lastMessage.data.id === taskId) {
-          
-          // Update the existing streaming message
+        if (lastMessage && 'type' in lastMessage && lastMessage.type === 'llm_chunk' && lastMessage.data.id === taskId) {
           const updatedMessage = {
             ...lastMessage,
             data: {
               ...lastMessage.data,
               chunk: lastMessage.data.chunk + chunk,
               chunk_index: chunkIndex,
-              is_final: isFinal
-            }
+              is_final: isFinal,
+            },
           };
-          
           return [...prev.slice(0, -1), updatedMessage];
         } else {
-          // Create new streaming message
-          const messageComponent = parseEventToMessage(cleanEventType, event.data);
-          if (messageComponent) {
-            return [...prev, messageComponent];
+          const newMessage = parseEventToMessage(cleanEventType, event.data);
+          if (newMessage) {
+            return [...prev, newMessage];
           }
           return prev;
         }
       });
 
-      // Convert to final message when streaming is complete
       if (isFinal) {
         setMessages(prev => {
           const lastMessage = prev[prev.length - 1];
-          if (lastMessage && 
-              'type' in lastMessage && 
-              lastMessage.type === 'llm_chunk' &&
-              lastMessage.data.id === taskId) {
-            
-            // Convert to final llm_response message
-            const finalMessage: MessageComponentType = {
+          if (lastMessage && 'type' in lastMessage && lastMessage.type === 'llm_chunk' && lastMessage.data.id === taskId) {
+            const finalMessage = {
               type: 'llm_response',
               data: {
                 id: lastMessage.data.id,
@@ -258,132 +309,28 @@ export default function AgentChat({
                 agent_id: lastMessage.data.agent_id,
                 event_type: 'LLMCallCompleted',
                 content: lastMessage.data.chunk,
-                role: 'assistant'
-              }
-            };
-            
+                role: 'assistant',
+              },
+            } as MessageComponentType;
             return [...prev.slice(0, -1), finalMessage];
           }
           return prev;
         });
       }
-
       return;
     }
 
-    // Special handling for tool call events - replace tool_call_started with tool_result
-    if (cleanEventType === 'ToolCallStarted') {
-      const originalData = event.data.original_data || event.data;
-      const toolName = originalData.tool_name || event.data.tool_name;
-      const toolCallId = originalData.tool_call_id || event.data.tool_call_id;
-
-      setMessages(prev => {
-        // Check if this tool call has already been started
-        const alreadyStarted = prev.some(msg => 
-          'type' in msg && 
-          msg.type === 'tool_call_started' && 
-          (msg.data as any).tool_name === toolName &&
-          (msg.data as any).tool_call_id === toolCallId
-        );
-
-        if (alreadyStarted) {
-          return prev;
-        }
-
-        // Create new tool call started message
-        const messageComponent = parseEventToMessage(cleanEventType, event.data);
-        if (messageComponent) {
-          return [...prev, messageComponent];
-        }
-        return prev;
-      });
-
-      return;
-    }
-
-    if (cleanEventType === 'ToolCallCompleted') {
-      const originalData = event.data.original_data || event.data;
-      const toolName = originalData.tool_name || event.data.tool_name;
-      const toolCallId = originalData.tool_call_id || event.data.tool_call_id;
-
-      setMessages(prev => {
-        // Check if this tool call has already been completed
-        const alreadyCompleted = prev.some(msg => 
-          'type' in msg && 
-          msg.type === 'tool_result' && 
-          (msg.data as any).tool_name === toolName &&
-          (msg.data as any).tool_call_id === toolCallId
-        );
-
-        if (alreadyCompleted) {
-          return prev;
-        }
-
-        // Find the last tool_call_started message for the same tool and call ID
-        const lastToolCallIndex = prev.findLastIndex(msg => 
-          'type' in msg && 
-          msg.type === 'tool_call_started' && 
-          msg.data.tool_name === toolName &&
-          msg.data.tool_call_id === toolCallId
-        );
-
-        if (lastToolCallIndex !== -1) {
-          // Replace the tool_call_started message with tool_result
-          const messageComponent = parseEventToMessage(cleanEventType, event.data);
-          if (messageComponent) {
-            const newMessages = [...prev];
-            newMessages[lastToolCallIndex] = messageComponent;
-            return newMessages;
-          }
-        } else {
-          // If no matching tool_call_started found, just add the result
-          const messageComponent = parseEventToMessage(cleanEventType, event.data);
-          if (messageComponent) {
-            return [...prev, messageComponent];
-          }
-        }
-        return prev;
-      });
-
-      return;
-    }
-
-    // Clear any loading state FIRST - before message parsing
+    // Workflow terminal events: stop loading
     if (cleanEventType === 'WorkflowCompleted' || cleanEventType === 'WorkflowFailed' || cleanEventType === 'task_failed') {
       setIsLoading(false);
     }
 
-    // Parse event into message component for all other event types
+    // Default: parse and append
     const messageComponent = parseEventToMessage(cleanEventType, event.data);
-    if (!messageComponent) {
-      return;
+    if (messageComponent) {
+      setMessages(prev => [...prev, messageComponent]);
     }
-
-    // Add the new message component to the messages
-    setMessages(prev => [...prev, messageComponent]);
-
-    // Handle special system events that don't create messages but affect UI state
-    switch (cleanEventType) {
-      case 'connected':
-        break;
-
-      case 'task_created':
-        if (event.data.task_id && !currentTaskId) {
-          setCurrentTaskId(event.data.task_id);
-          onTaskCreatedRef.current?.(event.data.task_id);
-        }
-        break;
-
-      case 'error':
-        console.error('SSE error:', event.data);
-        setIsLoading(false);
-        break;
-        
-      default:
-        // All other events are handled by the message parsing above
-        break;
-    }
-  }, [agent.id]); // Remove dependencies that cause frequent recreation
+  }, [agent.id]);
 
   // SSE event handlers
   const handleSSEError = useCallback((error: Event) => {

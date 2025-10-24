@@ -30,9 +30,11 @@ services:
       # Server settings
       - PORT=${PORT:-8000}
       - LOG_LEVEL=${LOG_LEVEL:-info}
-      - WORKFLOW__TEMPORAL_SERVER_URL=temporal:7233
       - RELOAD=${RELOAD:-true}
       - WORKERS=${WORKERS:-1}
+      - WORKFLOW__TEMPORAL_SERVER_URL=${WORKFLOW__TEMPORAL_SERVER_URL:-temporal:7233}
+      - WORKFLOW__TEMPORAL_NAMESPACE=default
+      - WORKFLOW__TEMPORAL_TASK_QUEUE=agent-tasks
       # Infisical environment (if using Infisical secret manager)
       - INFISICAL_ENVIRONMENT=dev
       - SECRET_MANAGER_ENCRYPTION_KEY=${SECRET_MANAGER_ENCRYPTION_KEY}
@@ -40,7 +42,7 @@ services:
       - ./core/apps/api/agentarea_api:/app/apps/api/agentarea_api
       - ./core/libs:/app/libs
       - ./core/apps/api/alembic:/app/apps/api/alembic
-      - ${INFISICAL_TOKEN_VOLUME:-./.volumes/infisical-local-data}:/app/bootstrap
+      # - ${INFISICAL_TOKEN_VOLUME:-./.volumes/infisical-local-data}:/app/bootstrap
     depends_on:
       db:
         condition: service_healthy
@@ -353,10 +355,8 @@ services:
       # Redis
       - REDIS_URL=redis://redis:6379
 
-      # Workflow settings
-      - WORKFLOW__USE_WORKFLOW_EXECUTION=true
-      - WORKFLOW__WORKFLOW_ENGINE=temporal
-      - WORKFLOW__TEMPORAL_SERVER_URL=temporal:7233
+      # Temporal
+      - WORKFLOW__TEMPORAL_SERVER_URL=${WORKFLOW__TEMPORAL_SERVER_URL:-temporal:7233}
       - WORKFLOW__TEMPORAL_NAMESPACE=default
       - WORKFLOW__TEMPORAL_TASK_QUEUE=agent-tasks
       - WORKFLOW__TEMPORAL_MAX_CONCURRENT_ACTIVITIES=10
@@ -367,7 +367,7 @@ services:
       - SECRET_MANAGER_ENCRYPTION_KEY=${SECRET_MANAGER_ENCRYPTION_KEY}
 
       # Development
-      - DEBUG=true
+      # - DEBUG=true
       - ENVIRONMENT=development
     networks:
       - temporal-network
@@ -378,7 +378,6 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "agentarea_worker.cli", "dev"]
 
-  # Ory Authentication Services
 
   # Ory Kratos Migration
   kratos-migrate:
