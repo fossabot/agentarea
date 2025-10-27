@@ -23,13 +23,15 @@ on:
         description: 'Whether to push to private registry'
         required: false
         type: boolean
-        default: 'false'
+        default: false
     secrets:
       DOCKERHUB_USERNAME:
         required: true
       DOCKERHUB_PASSWORD:
         required: true
       DOCKER_REGISTRY_MIRROR:
+        required: false
+      DOCKER_REGISTRY_MIRROR_PATH:
         required: false
       DOCKER_REGISTRY_MIRROR_USERNAME:
         required: false
@@ -57,7 +59,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Log in to Private Registry
-        if: ${{ inputs.use-private-registry == 'true' }}
+        if: ${{ inputs.use-private-registry }}
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.DOCKER_REGISTRY_MIRROR }}

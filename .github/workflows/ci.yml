@@ -150,13 +150,14 @@ jobs:
       component: api
       context: core
       dockerfile: core/apps/api/Dockerfile
-      use-private-registry: 'true'
+      use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-      DOCKER_REGISTRY_MIRROR: ${{ secrets.PRIVATE_REGISTRY }}
-      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.PRIVATE_REGISTRY_USERNAME }}
-      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.PRIVATE_REGISTRY_PASSWORD }}
+      DOCKER_REGISTRY_MIRROR: ${{ secrets.DOCKER_REGISTRY_MIRROR }}
+      DOCKER_REGISTRY_MIRROR_PATH: ${{ secrets.DOCKER_REGISTRY_MIRROR_PATH }}
+      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
+      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
 
   security:
     runs-on: ubuntu-latest
@@ -227,13 +228,14 @@ jobs:
       component: worker
       context: core
       dockerfile: core/apps/worker/Dockerfile
-      use-private-registry: 'true'
+      use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-      DOCKER_REGISTRY_MIRROR: ${{ secrets.PRIVATE_REGISTRY }}
-      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.PRIVATE_REGISTRY_USERNAME }}
-      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.PRIVATE_REGISTRY_PASSWORD }}
+      DOCKER_REGISTRY_MIRROR: ${{ secrets.DOCKER_REGISTRY_MIRROR }}
+      DOCKER_REGISTRY_MIRROR_PATH: ${{ secrets.DOCKER_REGISTRY_MIRROR_PATH }}
+      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
+      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
   docker-frontend:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
@@ -242,13 +244,14 @@ jobs:
       component: frontend
       context: frontend
       dockerfile: frontend/Dockerfile
-      use-private-registry: 'true'
+      use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-      DOCKER_REGISTRY_MIRROR: ${{ secrets.PRIVATE_REGISTRY }}
-      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.PRIVATE_REGISTRY_USERNAME }}
-      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.PRIVATE_REGISTRY_PASSWORD }}
+      DOCKER_REGISTRY_MIRROR: ${{ secrets.DOCKER_REGISTRY_MIRROR }}
+      DOCKER_REGISTRY_MIRROR_PATH: ${{ secrets.DOCKER_REGISTRY_MIRROR_PATH }}
+      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
+      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
   docker-bootstrap:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
@@ -257,13 +260,14 @@ jobs:
       component: bootstrap
       context: bootstrap
       dockerfile: bootstrap/Dockerfile
-      use-private-registry: 'true'
+      use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-      DOCKER_REGISTRY_MIRROR: ${{ secrets.PRIVATE_REGISTRY }}
-      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.PRIVATE_REGISTRY_USERNAME }}
-      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.PRIVATE_REGISTRY_PASSWORD }}
+      DOCKER_REGISTRY_MIRROR: ${{ secrets.DOCKER_REGISTRY_MIRROR }}
+      DOCKER_REGISTRY_MIRROR_PATH: ${{ secrets.DOCKER_REGISTRY_MIRROR_PATH }}
+      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
+      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
   docker-mcp-manager:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
@@ -272,10 +276,11 @@ jobs:
       component: mcp-manager
       context: mcp-infrastructure/go-mcp-manager
       dockerfile: mcp-infrastructure/go-mcp-manager/Dockerfile
-      use-private-registry: 'true'
+      use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-      DOCKER_REGISTRY_MIRROR: ${{ secrets.PRIVATE_REGISTRY }}
-      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.PRIVATE_REGISTRY_USERNAME }}
-      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.PRIVATE_REGISTRY_PASSWORD }}
+      DOCKER_REGISTRY_MIRROR: ${{ secrets.DOCKER_REGISTRY_MIRROR }}
+      DOCKER_REGISTRY_MIRROR_PATH: ${{ secrets.DOCKER_REGISTRY_MIRROR_PATH }}
+      DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
+      DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
