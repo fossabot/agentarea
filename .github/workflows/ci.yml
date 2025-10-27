@@ -150,6 +150,7 @@ jobs:
       component: api
       context: core
       dockerfile: core/apps/api/Dockerfile
+      use-private-registry: 'true'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -226,6 +227,7 @@ jobs:
       component: worker
       context: core
       dockerfile: core/apps/worker/Dockerfile
+      use-private-registry: 'true'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -240,6 +242,7 @@ jobs:
       component: frontend
       context: frontend
       dockerfile: frontend/Dockerfile
+      use-private-registry: 'true'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -254,6 +257,7 @@ jobs:
       component: bootstrap
       context: bootstrap
       dockerfile: bootstrap/Dockerfile
+      use-private-registry: 'true'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -268,6 +272,7 @@ jobs:
       component: mcp-manager
       context: mcp-infrastructure/go-mcp-manager
       dockerfile: mcp-infrastructure/go-mcp-manager/Dockerfile
+      use-private-registry: 'true'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
