@@ -145,6 +145,9 @@ jobs:
   docker-api:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+      contents: read
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: api
@@ -223,6 +226,9 @@ jobs:
   docker-worker:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+      contents: read
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: worker
@@ -239,6 +245,9 @@ jobs:
   docker-frontend:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+      contents: read
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: frontend
@@ -255,6 +264,9 @@ jobs:
   docker-bootstrap:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+      contents: read
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: bootstrap
@@ -271,6 +283,9 @@ jobs:
   docker-mcp-manager:
     needs: [lint, test]
     if: github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+      contents: read
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: mcp-manager
