@@ -77,7 +77,7 @@ jobs:
       - name: Run database migrations
         run: |
           cd apps/api
-          uv run --from agentarea-api agentarea-api migrate
+          uv run --package agentarea-api agentarea-api migrate
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           POSTGRES_USER: postgres

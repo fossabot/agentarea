@@ -143,7 +143,6 @@ jobs:
   #         path: core/dist/
 
   docker-api:
-    needs: [lint, test]
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
@@ -224,7 +223,6 @@ jobs:
             echo "| $component | ${build_time}s |" >> $GITHUB_STEP_SUMMARY
           done
   docker-worker:
-    needs: [lint, test]
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
@@ -243,7 +241,6 @@ jobs:
       DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
       DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
   docker-frontend:
-    needs: [lint, test]
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
@@ -262,7 +259,6 @@ jobs:
       DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
       DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
   docker-bootstrap:
-    needs: [lint, test]
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
@@ -281,7 +277,6 @@ jobs:
       DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
       DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
   docker-mcp-manager:
-    needs: [lint, test]
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
