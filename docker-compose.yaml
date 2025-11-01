@@ -32,8 +32,6 @@ services:
       - WORKFLOW__TEMPORAL_SERVER_URL=${WORKFLOW__TEMPORAL_SERVER_URL:-temporal:7233}
       - WORKFLOW__TEMPORAL_NAMESPACE=default
       - WORKFLOW__TEMPORAL_TASK_QUEUE=agent-tasks
-      # Infisical environment (if using Infisical secret manager)
-      - INFISICAL_ENVIRONMENT=dev
       - SECRET_MANAGER_ENCRYPTION_KEY=${SECRET_MANAGER_ENCRYPTION_KEY}
     depends_on:
       db:
@@ -67,12 +65,15 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
     depends_on:
       db:
         condition: service_healthy
       bootstrap_db:
         condition: service_completed_successfully
-    command: ["python", "-m", "agentarea_api.cli", "migrate"]
+    command: ["agentarea-api", "migrate"]
+    working_dir: /app/apps/api
 
   # Bootstrap Database Creation - creates all required databases
   bootstrap_db:
@@ -84,7 +85,6 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-aiagents}
       - TEMPORAL_DB=${TEMPORAL_DB:-temporal}
-      - INFISICAL_DB=${INFISICAL_DB:-infisical}
       - KRATOS_DB=${KRATOS_DB:-kratos}
       - HYDRA_DB=${HYDRA_DB:-hydra}
     depends_on:
@@ -97,7 +97,6 @@ services:
     image: agentarea-bootstrap:latest
     volumes:
       - ./data:/app/llm
-      # - ${INFISICAL_TOKEN_VOLUME:-./.volumes/infisical-local-data}/bootstrap/data:/app/data
     environment:
       - SECRET_MANAGER_TYPE=${SECRET_MANAGER_TYPE:-database}
       - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
@@ -106,7 +105,6 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-your-secure-password}
       - ORGANIZATION_NAME=${ORGANIZATION_NAME:-your-org-name}
-      - INFISICAL_URL=http://infisical:8080
       - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - LLM_PROVIDERS_YAML=/app/llm/providers.yaml
       - MCP_PROVIDERS_YAML=/app/llm/mcp_providers.yaml
@@ -179,23 +177,6 @@ services:
       - temporal-network
       - auth-network
 
-  # infisical:
-  #   image: infisical/infisical:latest-postgres
-  #   container_name: infisical-backend
-  #   restart: always
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_started
-  #   env_file: .env
-  #   ports:
-  #     - 3333:8080
-  #   environment:
-  #     - NODE_ENV=production
-  #     - POSTGRES_DB=${INFISICAL_DB:-infisical}
-  #     - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${INFISICAL_DB:-infisical}
-
   redis:
     image: redis
     container_name: agentarea-redis
@@ -224,7 +205,6 @@ services:
       - mcp_containers:/var/lib/containers/storage
       - ./mcp-infrastructure/traefik:/etc/traefik:rw # Traefik configuration
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - ${INFISICAL_TOKEN_VOLUME:-./.volumes/infisical-local-data}/bootstrap/data:/app/bootstrap/data:ro # Access to Infisical bootstrap token
     networks:
       - mcp-network
       - default
@@ -243,8 +223,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       SECRET_MANAGER_ENCRYPTION_KEY: ${SECRET_MANAGER_ENCRYPTION_KEY}
-      # Infisical secret manager settings (if using Infisical)
-      INFISICAL_ENVIRONMENT: dev
 
   # Temporal Infrastructure Services
   temporal:
@@ -472,13 +450,10 @@ volumes:
   postgres_data:
   minio_data:
   redis_data:
-  infisical_bootstrap:
   mcp_containers:
     driver: local
 
 networks:
-  infisical:
-    driver: bridge
   mcp-network:
     driver: bridge
   temporal-network:

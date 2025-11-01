@@ -46,7 +46,7 @@ agentarea-secrets = { workspace = true }
 agentarea-triggers = { workspace = true }
 
 [project.scripts]
-agentarea-api = "agentarea_api.main:app"
+agentarea-api = "agentarea_api.cli:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["agentarea_api"]

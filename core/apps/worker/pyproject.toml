@@ -28,7 +28,7 @@ agentarea-execution = { workspace = true }
 agentarea-triggers = { workspace = true }
 
 [project.scripts]
-agentarea-worker = "agentarea_worker.main:app"
+agentarea-worker = "agentarea_worker.cli:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["agentarea_worker"] 

@@ -64,12 +64,15 @@ build: ## Build development Docker images
 	docker compose -f docker-compose.dev.yaml build
 
 up: ## Start development environment
+	docker compose -f docker-compose.yaml up
+
+up-dev: ## Start development environment in background
 	docker compose -f docker-compose.dev.yaml up
 
-up-d: ## Start development environment in background
-	docker compose -f docker-compose.dev.yaml up -d
-
 down: ## Stop development environment
+	docker compose -f docker-compose.yaml down
+
+down-dev: ## Stop development environment
 	docker compose -f docker-compose.dev.yaml down
 
 down-clean: ## Stop and clean development environment (removes volumes)
