@@ -9,11 +9,8 @@ import pytest
 from agentarea_agents.application.agent_service import AgentService
 from agentarea_agents.application.temporal_workflow_service import TemporalWorkflowService
 from agentarea_api.api.v1.agents_tasks import (
-    TaskEventResponse,
-    get_task_events,
     pause_agent_task,
     resume_agent_task,
-    stream_task_events,
 )
 from fastapi import HTTPException
 
@@ -60,7 +57,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_pause_agent_task_success(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test successful task pause."""
         # Setup mocks
@@ -75,6 +72,7 @@ class TestAgentTaskControl:
         result = await pause_agent_task(
             agent_id=test_agent_id,
             task_id=test_task_id,
+            user_context=test_user_context,
             agent_service=mock_agent_service,
             workflow_task_service=mock_workflow_service,
         )
@@ -94,7 +92,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_pause_agent_task_agent_not_found(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, test_user_context
     ):
         """Test pause task when agent doesn't exist."""
         # Setup mocks
@@ -105,6 +103,7 @@ class TestAgentTaskControl:
             await pause_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -114,7 +113,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_pause_agent_task_task_not_found(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test pause task when task doesn't exist."""
         # Setup mocks
@@ -128,6 +127,7 @@ class TestAgentTaskControl:
             await pause_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -137,7 +137,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_pause_agent_task_already_completed(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test pause task when task is already completed."""
         # Setup mocks
@@ -151,6 +151,7 @@ class TestAgentTaskControl:
             await pause_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -160,7 +161,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_pause_agent_task_already_paused(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test pause task when task is already paused."""
         # Setup mocks
@@ -174,6 +175,7 @@ class TestAgentTaskControl:
             await pause_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -183,7 +185,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_pause_agent_task_pause_fails(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test pause task when pause operation fails."""
         # Setup mocks
@@ -198,6 +200,7 @@ class TestAgentTaskControl:
             await pause_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -207,7 +210,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_resume_agent_task_success(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test successful task resume."""
         # Setup mocks
@@ -221,6 +224,7 @@ class TestAgentTaskControl:
         result = await resume_agent_task(
             agent_id=test_agent_id,
             task_id=test_task_id,
+            user_context=test_user_context,
             agent_service=mock_agent_service,
             workflow_task_service=mock_workflow_service,
         )
@@ -240,7 +244,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_resume_agent_task_not_paused(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test resume task when task is not paused."""
         # Setup mocks
@@ -254,6 +258,7 @@ class TestAgentTaskControl:
             await resume_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -263,7 +268,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_resume_agent_task_resume_fails(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test resume task when resume operation fails."""
         # Setup mocks
@@ -278,6 +283,7 @@ class TestAgentTaskControl:
             await resume_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -287,7 +293,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_pause_agent_task_exception_handling(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test pause task exception handling."""
         # Setup mocks
@@ -299,6 +305,7 @@ class TestAgentTaskControl:
             await pause_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
@@ -308,7 +315,7 @@ class TestAgentTaskControl:
 
     @pytest.mark.asyncio
     async def test_resume_agent_task_exception_handling(
-        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent
+        self, mock_agent_service, mock_workflow_service, test_agent_id, test_task_id, mock_agent, test_user_context
     ):
         """Test resume task exception handling."""
         # Setup mocks
@@ -320,6 +327,7 @@ class TestAgentTaskControl:
             await resume_agent_task(
                 agent_id=test_agent_id,
                 task_id=test_task_id,
+                user_context=test_user_context,
                 agent_service=mock_agent_service,
                 workflow_task_service=mock_workflow_service,
             )
