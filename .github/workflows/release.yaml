@@ -44,6 +44,12 @@ jobs:
           echo "VERSION=v${new_version}" >> $GITHUB_OUTPUT
           echo "Bumped version to v${new_version}"
 
+      - name: Update Helm chart appVersion
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/update-appversion.py
+
       - name: Create release branch and PR
         uses: peter-evans/create-pull-request@v6
         with:
