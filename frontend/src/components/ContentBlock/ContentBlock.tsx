@@ -27,7 +27,7 @@ type ContentBlockProps = {
         controls?: React.ReactNode;
       }
     | {
-        breadcrumb: { label: string; href?: string }[];
+        breadcrumb: { label: string; href?: string; control?: React.ReactNode }[];
         controls?: React.ReactNode;
         description?: string;
       };
@@ -75,17 +75,27 @@ export default function ContentBlock({
                         <React.Fragment key={`breadcrumb-${index}`}>
                           <BreadcrumbItem>
                             {index === header.breadcrumb.length - 1 ? (
-                              <BreadcrumbPage className="font-semibold">
-                                {item.label}
-                              </BreadcrumbPage>
+                              <>
+                                <BreadcrumbPage className="font-semibold">
+                                  {item.label}
+                                </BreadcrumbPage>
+                                {item.control}
+                              </>
                             ) : item.href ? (
-                              <BreadcrumbLink asChild>
-                                <Link href={item.href || ""}>{item.label}</Link>
-                              </BreadcrumbLink>
+                              <>
+                                <BreadcrumbLink asChild>
+                                  
+                                    <Link href={item.href || ""}>{item.label}</Link>
+                                </BreadcrumbLink>
+                                {item.control}
+                              </>
                             ) : (
-                              <BreadcrumbPage className="text-muted-foreground">
-                                {item.label}
-                              </BreadcrumbPage>
+                              <>
+                                <BreadcrumbPage className="text-muted-foreground">
+                                    {item.label}
+                                </BreadcrumbPage>
+                                {item.control}
+                              </>
                             )}
                           </BreadcrumbItem>
                           {index < header.breadcrumb.length - 1 && (

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ContentBlock from "@/components/ContentBlock/ContentBlock";
 import { getAgent } from "@/lib/api";
 import AgentHeaderTabs from "./components/AgentHeaderTabs";
+import VersionDropdown from "./components/VersionDropdown";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -24,7 +25,7 @@ export default async function AgentLayout({ params, children }: Props) {
       header={{
         breadcrumb: [
           { label: t("browseAgents"), href: "/agents" },
-          { label: agent.name, href: `/agents/${agent.id}` },
+          { label: agent.name, href: `/agents/${agent.id}`, control: <VersionDropdown className="ml-2" /> },
         ],
       }}
       className="p-0"

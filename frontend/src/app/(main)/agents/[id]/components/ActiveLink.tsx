@@ -23,7 +23,7 @@ export default function ActiveLink({ href, children, className }: Props) {
         "transition-all duration-300",
         className,
         isActive
-          ? "rounded-sm bg-background bg-sidebar-accent text-primary"
+          ? "rounded-sm bg-background bg-sidebar-accent text-primary dark:bg-accent-foreground/50 dark:text-white"
           : "text-muted-foreground hover:text-foreground"
       )}
     >
