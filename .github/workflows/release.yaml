@@ -25,57 +25,33 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install yq
-        uses: mikefarah/yq@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
 
-      - name: Determine release version
+      - name: Install bumpversion
+        run: pip install bumpversion
+
+      - name: Bump version
         id: get-version
         shell: bash
         run: |
           set -euo pipefail
-          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          version_no_v=${last_tag#v}
-          major=${version_no_v%%.*}
-          rest=${version_no_v#*.}
-          minor=${rest%%.*}
-          patch=${version_no_v##*.}
           type="${{ github.event.inputs.release_type }}"
-          if [ "$type" = "minor" ]; then
-            minor=$((minor + 1))
-            patch=0
-          else
-            patch=$((patch + 1))
-          fi
-          new_version="v${major}.${minor}.${patch}"
-          echo "Computed next version: $new_version"
-          echo "VERSION=$new_version" >> $GITHUB_OUTPUT
+          bumpversion $type --allow-dirty
+          new_version=$(cat VERSION)
+          echo "VERSION=v${new_version}" >> $GITHUB_OUTPUT
+          echo "Bumped version to v${new_version}"
 
-      - name: Update Helm chart versions
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${{ steps.get-version.outputs.VERSION }}"
-          echo "Bumping charts to ${version}"
-          for chart in charts/*/Chart.yaml; do
-            [ -f "$chart" ] || continue
-            # Strip leading 'v' for chart semver fields
-            chart_version="${version#v}"
-            yq -i ".version = \"${chart_version}\" | .appVersion = \"${chart_version}\"" "$chart"
-          done
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "release/${version}" || git checkout "release/${version}"
-          git add charts/*/Chart.yaml || true
-          git commit -m "chore(release): bump chart versions to ${version}" || echo "No changes to commit"
-          git push -u origin "release/${version}" || echo "Branch push skipped"
-
-      - name: Open PR for version bumps
+      - name: Create release branch and PR
         uses: peter-evans/create-pull-request@v6
         with:
-          title: "Release ${{ steps.get-version.outputs.VERSION }}: bump chart versions"
+          title: "Release ${{ steps.get-version.outputs.VERSION }}: version bumps"
           branch: "release/${{ steps.get-version.outputs.VERSION }}"
-          body: "Automated version bump for charts to ${{ steps.get-version.outputs.VERSION }}"
+          body: "Automated version bump to ${{ steps.get-version.outputs.VERSION }}"
           labels: release
+          commit-message: "chore(release): bump versions to ${{ steps.get-version.outputs.VERSION }}"
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -116,9 +92,9 @@ jobs:
       - name: Log in to Private Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.PRIVATE_REGISTRY }}
-          username: ${{ secrets.PRIVATE_REGISTRY_USERNAME }}
-          password: ${{ secrets.PRIVATE_REGISTRY_PASSWORD }}
+          registry: ${{ secrets.DOCKER_REGISTRY_MIRROR }}
+          username: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
 
       - name: Extract metadata
         id: meta
@@ -126,7 +102,7 @@ jobs:
         with:
           images: |
             agentarea/agentarea-${{ matrix.name }}
-            ${{ secrets.PRIVATE_REGISTRY }}/agentarea/agentarea-${{ matrix.name }}
+            ${{ secrets.DOCKER_REGISTRY_MIRROR }}/agentarea/agentarea-${{ matrix.name }}
           tags: |
             type=raw,value=${{ needs.bump-versions.outputs.VERSION }}
             type=raw,value=latest

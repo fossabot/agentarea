@@ -1,0 +1,487 @@
+version: "3.8"
+services:
+  app:
+    image: agentarea-backend:latest
+    container_name: agentarea-backend
+    ports:
+      - "8000:8000"
+    restart: always
+    environment:
+      # S3 settings
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
+      - AWS_REGION=${MINIO_REGION}
+      - S3_BUCKET_NAME=${DOCUMENTS_BUCKET}
+      - AWS_ENDPOINT_URL=http://minio:9000
+      # Database settings
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      # MCP settings
+      - MCP_MANAGER_URL=http://mcp-manager:80/api/mcp
+      - MCP_PROXY_HOST=http://localhost:7999
+      - REDIS_URL=redis://redis:6379
+      - MCP_CLIENT_TIMEOUT=30
+      # Server settings
+      - PORT=${PORT:-8000}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - RELOAD=${RELOAD:-false}
+      - WORKERS=${WORKERS:-1}
+      - WORKFLOW__TEMPORAL_SERVER_URL=${WORKFLOW__TEMPORAL_SERVER_URL:-temporal:7233}
+      - WORKFLOW__TEMPORAL_NAMESPACE=default
+      - WORKFLOW__TEMPORAL_TASK_QUEUE=agent-tasks
+      # Infisical environment (if using Infisical secret manager)
+      - INFISICAL_ENVIRONMENT=dev
+      - SECRET_MANAGER_ENCRYPTION_KEY=${SECRET_MANAGER_ENCRYPTION_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      app_migrations:
+        condition: service_completed_successfully
+      bootstrap:
+        condition: service_completed_successfully
+      # mcp-manager:
+      #   condition: service_healthy
+    networks:
+      - default
+      - mcp-network
+      - temporal-network
+
+  app_migrations:
+    image: agentarea-backend:latest
+    environment:
+      ## Have to add it for now
+      # S3 settings
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
+      - AWS_REGION=${MINIO_REGION}
+      - S3_BUCKET_NAME=${DOCUMENTS_BUCKET}
+      - AWS_ENDPOINT_URL=http://minio:9000
+      # Only database settings
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
+      bootstrap_db:
+        condition: service_completed_successfully
+    command: ["python", "-m", "agentarea_api.cli", "migrate"]
+
+  # Bootstrap Database Creation - creates all required databases
+  bootstrap_db:
+    image: agentarea-bootstrap:latest
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-aiagents}
+      - TEMPORAL_DB=${TEMPORAL_DB:-temporal}
+      - INFISICAL_DB=${INFISICAL_DB:-infisical}
+      - KRATOS_DB=${KRATOS_DB:-kratos}
+      - HYDRA_DB=${HYDRA_DB:-hydra}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "-c", "from code.database_setup import database_setup; database_setup()"]
+
+  # Bootstrap Application Setup - runs after migrations
+  bootstrap:
+    image: agentarea-bootstrap:latest
+    volumes:
+      - ./data:/app/llm
+      # - ${INFISICAL_TOKEN_VOLUME:-./.volumes/infisical-local-data}/bootstrap/data:/app/data
+    environment:
+      - SECRET_MANAGER_TYPE=${SECRET_MANAGER_TYPE:-database}
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+      - MINIO_ENDPOINT=http://minio:9000
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-your-secure-password}
+      - ORGANIZATION_NAME=${ORGANIZATION_NAME:-your-org-name}
+      - INFISICAL_URL=http://infisical:8080
+      - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - LLM_PROVIDERS_YAML=/app/llm/providers.yaml
+      - MCP_PROVIDERS_YAML=/app/llm/mcp_providers.yaml
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-aiagents}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      app_migrations:
+        condition: service_completed_successfully
+      # infisical:
+      #   condition: service_started
+
+  # Frontend service
+  frontend:
+    image: agentarea-frontend:latest
+    container_name: agentarea-frontend
+    ports:
+      - "3000:3000"
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      - app
+      - kratos
+    networks:
+      - default
+      - auth-network
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=postgres  # Use default postgres DB, bootstrap will create all others
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+      - temporal-network
+      - auth-network
+
+  # infisical:
+  #   image: infisical/infisical:latest-postgres
+  #   container_name: infisical-backend
+  #   restart: always
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_started
+  #   env_file: .env
+  #   ports:
+  #     - 3333:8080
+  #   environment:
+  #     - NODE_ENV=production
+  #     - POSTGRES_DB=${INFISICAL_DB:-infisical}
+  #     - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${INFISICAL_DB:-infisical}
+
+  redis:
+    image: redis
+    container_name: agentarea-redis
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - default
+      - mcp-network
+
+  mcp-manager:
+    image: mcp-manager:latest
+    container_name: mcp-manager
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "7999:80" # Traefik proxy (unified entry point)
+    tmpfs:
+      - /tmp
+      - /run
+    volumes:
+      - mcp_containers:/var/lib/containers/storage
+      - ./mcp-infrastructure/traefik:/etc/traefik:rw # Traefik configuration
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - ${INFISICAL_TOKEN_VOLUME:-./.volumes/infisical-local-data}/bootstrap/data:/app/bootstrap/data:ro # Access to Infisical bootstrap token
+    networks:
+      - mcp-network
+      - default
+    environment:
+      LOG_LEVEL: INFO
+      TRAEFIK_NETWORK: podman
+      REDIS_URL: redis://redis:6379
+      MCP_PROXY_HOST: http://localhost:7999
+      CORE_API_URL: http://agentarea-backend:8000
+      # Secret manager configuration
+      SECRET_MANAGER_TYPE: ${SECRET_MANAGER_TYPE:-database}
+      # Database secret manager settings
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      SECRET_MANAGER_ENCRYPTION_KEY: ${SECRET_MANAGER_ENCRYPTION_KEY}
+      # Infisical secret manager settings (if using Infisical)
+      INFISICAL_ENVIRONMENT: dev
+
+  # Temporal Infrastructure Services
+  temporal:
+    image: temporalio/auto-setup:1.28
+    container_name: agentarea-temporal
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      bootstrap:
+        condition: service_completed_successfully
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PWD=${POSTGRES_PASSWORD}
+      - POSTGRES_SEEDS=db
+      - DBNAME=${TEMPORAL_DB:-temporal}
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+      - BIND_ON_IP=0.0.0.0
+    networks:
+      - temporal-network
+      - default
+    ports:
+      - 7233:7233
+    labels:
+      kompose.volume.type: configMap
+    volumes:
+      - ./core/temporal-config:/etc/temporal/config/dynamicconfig
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+  temporal-admin-tools:
+    image: temporalio/admin-tools:1.28
+    container_name: agentarea-temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    networks:
+      - temporal-network
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    container_name: agentarea-temporal-ui
+    depends_on:
+      temporal:
+        condition: service_healthy
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:2.39.0
+    networks:
+      - temporal-network
+    ports:
+      - 8082:8080
+
+  # AgentArea Worker Service
+  agentarea-worker:
+    image: agentarea-worker:latest
+    container_name: agentarea-worker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      temporal:
+        condition: service_healthy
+    environment:
+      # Database
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - LLM_DOCKER_HOST=host.docker.internal
+
+      # Redis
+      - REDIS_URL=redis://redis:6379
+
+      # Temporal
+      - WORKFLOW__TEMPORAL_SERVER_URL=${WORKFLOW__TEMPORAL_SERVER_URL:-temporal:7233}
+      - WORKFLOW__TEMPORAL_NAMESPACE=default
+      - WORKFLOW__TEMPORAL_TASK_QUEUE=agent-tasks
+      - WORKFLOW__TEMPORAL_MAX_CONCURRENT_ACTIVITIES=10
+      - WORKFLOW__TEMPORAL_MAX_CONCURRENT_WORKFLOWS=5
+
+      # Task execution
+      - TASK__ENABLE_DYNAMIC_ACTIVITY_DISCOVERY=true
+      - SECRET_MANAGER_ENCRYPTION_KEY=${SECRET_MANAGER_ENCRYPTION_KEY}
+
+      # Development
+      # - DEBUG=true
+      - ENVIRONMENT=production
+    networks:
+      - temporal-network
+      - default
+    restart: unless-stopped
+
+  # Ory Kratos Migration
+  kratos-migrate:
+    image: oryd/kratos:v1.3.1
+    environment:
+      DSN: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${KRATOS_DB:-kratos}?sslmode=disable&max_conns=20&max_idle_conns=4
+    command: migrate sql -e --yes
+    volumes:
+      - ./config/auth/kratos:/etc/config/kratos
+    networks:
+      - auth-network
+    depends_on:
+      db:
+        condition: service_healthy
+      bootstrap_db:
+        condition: service_completed_successfully
+
+  # Ory Kratos Identity Server
+  kratos:
+    image: oryd/kratos:v1.3.1
+    ports:
+      - "4433:4433" # public API
+      - "4434:4434" # admin API
+    environment:
+      DSN: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${KRATOS_DB:-kratos}?sslmode=disable&max_conns=20&max_idle_conns=4
+      LOG_LEVEL: info
+      # SMTP Configuration - Override courier settings via environment variables
+      COURIER_SMTP_CONNECTION_URI: "${SMTP_PROTOCOL}://${SMTP_USERNAME}:${SMTP_PASSWORD}@${SMTP_HOST}:${SMTP_PORT}/?skip_ssl_verify=${SMTP_SKIP_SSL_VERIFY}"
+      COURIER_SMTP_FROM_ADDRESS: ${SMTP_FROM_EMAIL}
+      COURIER_SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+    volumes:
+      - ./config/auth/kratos:/etc/config/kratos
+    networks:
+      - auth-network
+    depends_on:
+      db:
+        condition: service_healthy
+      kratos-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # # Ory Hydra OAuth2/OIDC Server
+  # hydra:
+  #   image: oryd/hydra:v2.2.0
+  #   ports:
+  #     - "4444:4444" # public API
+  #     - "4445:4445" # admin API
+  #   environment:
+  #     DSN: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${HYDRA_DB:-hydra}?sslmode=disable&max_conns=20&max_idle_conns=4
+  #     URLS_SELF_ISSUER: http://localhost:4444
+  #     URLS_CONSENT: http://localhost:3000/auth/consent
+  #     URLS_LOGIN: http://localhost:3000/auth/login
+  #     URLS_LOGOUT: http://localhost:3000/auth/logout
+  #     URLS_ERROR: http://localhost:3000/auth/error
+  #     SECRETS_SYSTEM: this-is-the-primary-secret-replace-me-in-production
+  #     OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES: public,pairwise
+  #     OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT: some-random-salt
+  #     LOG_LEVEL: debug
+  #     LOG_LEAK_SENSITIVE_VALUES: true
+  #   command: serve all --dev
+  #   volumes:
+  #     - ./config/auth/hydra:/etc/config/hydra
+  #   networks:
+  #     - auth-network
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+
+  # MailSlurper for email testing (catches emails in development)
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    ports:
+      - "4436:4436" # web UI
+      - "4437:4437" # SMTP
+    networks:
+      - auth-network
+
+  # # Hydra OAuth2 Client Setup
+  # hydra-migrate:
+  #   image: oryd/hydra:v2.2.0
+  #   environment:
+  #     DSN: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${HYDRA_DB:-hydra}?sslmode=disable&max_conns=20&max_idle_conns=4
+  #   command: migrate -c /etc/config/hydra/hydra.yml sql -e --yes
+  #   volumes:
+  #     - ./config/auth/hydra:/etc/config/hydra
+  #   networks:
+  #     - auth-network
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+
+  # # Register OAuth2 client for frontend
+  # hydra-client-setup:
+  #   image: oryd/hydra:v2.2.0
+  #   environment:
+  #     ORY_SDK_URL: http://hydra:4445
+  #   entrypoint: ["sh", "-c"]
+  #   command: >
+  #     "
+  #       sleep 15 &&
+  #       hydra create oauth2-client \
+  #         --name 'AgentArea Frontend' \
+  #         --secret agentarea-secret \
+  #         --grant-type authorization_code,refresh_token \
+  #         --response-type code \
+  #         --scope openid,profile,email \
+  #         --redirect-uri http://localhost:3000/auth/callback \
+  #         --redirect-uri http://localhost:3000/workplace \
+  #         --skip-consent || echo 'Client may already exist'
+  #     "
+  #   networks:
+  #     - auth-network
+  #   depends_on:
+  #     hydra:
+  #       condition: service_started
+
+volumes:
+  postgres_data:
+  minio_data:
+  redis_data:
+  infisical_bootstrap:
+  mcp_containers:
+    driver: local
+
+networks:
+  infisical:
+    driver: bridge
+  mcp-network:
+    driver: bridge
+  temporal-network:
+    driver: bridge
+  auth-network:
+    driver: bridge
