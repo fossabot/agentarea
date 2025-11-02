@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentarea-worker"
+version = "0.0.1"
+description = "AgentArea Worker application"
+license = {text = "EPL-2.0"}
+requires-python = ">=3.12"
+dependencies = [
+    "agentarea-common",
+    "agentarea-agents", 
+    "agentarea-tasks",
+    "agentarea-execution",
+    "agentarea-triggers",
+    "temporalio>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "watchfiles>=0.21.0",
+    "click>=8.0.0",
+]
+
+[tool.uv.sources]
+agentarea-common = { workspace = true }
+agentarea-agents = { workspace = true }
+agentarea-tasks = { workspace = true }
+agentarea-execution = { workspace = true }
+agentarea-triggers = { workspace = true }
+
+[project.scripts]
+agentarea-worker = "agentarea_worker.cli:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agentarea_worker"] 
