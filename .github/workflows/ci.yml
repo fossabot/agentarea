@@ -20,27 +20,27 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          cache-dependency-glob: "core/**/pyproject.toml"
+          cache-dependency-glob: "agentarea-platform/**/pyproject.toml"
 
       - name: Set up Python
         run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        working-directory: core
+        working-directory: agentarea-platform
         run: |
           uv sync --group lint
           uv sync --group dev
 
       - name: Run ruff check
-        working-directory: core
+        working-directory: agentarea-platform
         run: uv run ruff check .
 
       - name: Run ruff format check
-        working-directory: core
+        working-directory: agentarea-platform
         run: uv run ruff format --check .
 
       - name: Run pyright
-        working-directory: core
+        working-directory: agentarea-platform
         run: uv run pyright
 
   # test:
@@ -150,8 +150,8 @@ jobs:
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: api
-      context: core
-      dockerfile: core/apps/api/Dockerfile
+      context: agentarea-platform
+      dockerfile: agentarea-platform/apps/api/Dockerfile
       use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -179,11 +179,11 @@ jobs:
         run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        working-directory: core
+        working-directory: agentarea-platform
         run: uv sync --group dev
 
       - name: Benchmark build performance
-        working-directory: core
+        working-directory: agentarea-platform
         run: |
           echo "## Build Performance Report" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Build Time |" >> $GITHUB_STEP_SUMMARY
@@ -204,8 +204,8 @@ jobs:
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: worker
-      context: core
-      dockerfile: core/apps/worker/Dockerfile
+      context: agentarea-platform
+      dockerfile: agentarea-platform/apps/worker/Dockerfile
       use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -222,8 +222,8 @@ jobs:
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: frontend
-      context: frontend
-      dockerfile: frontend/Dockerfile
+      context: agentarea-webapp
+      dockerfile: agentarea-webapp/Dockerfile
       use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

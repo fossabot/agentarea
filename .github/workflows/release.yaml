@@ -68,14 +68,14 @@ jobs:
       matrix:
         include:
           - name: api
-            context: core
-            file: core/apps/api/Dockerfile
+            context: agentarea-platform
+            file: agentarea-platform/apps/api/Dockerfile
           - name: worker
-            context: core
-            file: core/apps/worker/Dockerfile
+            context: agentarea-platform
+            file: agentarea-platform/apps/worker/Dockerfile
           - name: frontend
-            context: frontend
-            file: frontend/Dockerfile
+            context: agentarea-webapp
+            file: agentarea-webapp/Dockerfile
           - name: bootstrap
             context: bootstrap
             file: bootstrap/Dockerfile

@@ -2,7 +2,7 @@ name: Backend CI workflow
 on:
   push:
     paths:
-      - "core/**"
+      - "agentarea-platform/**"
       - ".github/**"
     branches:
       - main
@@ -10,15 +10,15 @@ on:
     branches:
       - main
     paths:
-      - "core/**"
+      - "agentarea-platform/**"
       - ".github/**"
 
 env:
-  CONTAINER_NAME: agentarea-core
+  CONTAINER_NAME: agentarea-platform
 
 defaults:
   run:
-    working-directory: ./core/
+    working-directory: ./agentarea-platform/
 
 jobs:
   build:
