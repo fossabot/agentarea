@@ -68,7 +68,7 @@ echo "✅ Backend infrastructure is ready!"
 # Step 2: Start frontend
 echo ""
 echo "🌐 Starting frontend..."
-cd frontend
+cd agentarea-webapp
 
 # Install dependencies if needed
 if [ ! -d "node_modules" ]; then

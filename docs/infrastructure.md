@@ -68,13 +68,13 @@ graph TB
           - redis
     
       agentarea-frontend:
-        build: ./frontend
+        build: ./agentarea-webapp
         ports:
           - "3000:3000"
         environment:
           - NODE_ENV=development
         volumes:
-          - ./frontend/src:/app/src
+          - ./agentarea-webapp/src:/app/src
     
       postgres:
         image: postgres:15-alpine

@@ -33,7 +33,7 @@ cd agentarea
 ### 2. Environment Configuration
 ```bash
 # Copy environment template
-cp core/docs/env.example .env
+cp agentarea-platform/docs/env.example .env
 
 # Edit configuration (optional for development)
 vim .env

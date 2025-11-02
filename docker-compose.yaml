@@ -253,7 +253,7 @@ services:
     labels:
       kompose.volume.type: configMap
     volumes:
-      - ./core/temporal-config:/etc/temporal/config/dynamicconfig
+      - ./agentarea-platform/temporal-config:/etc/temporal/config/dynamicconfig
     healthcheck:
       test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
       interval: 30s

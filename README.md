@@ -117,10 +117,10 @@ That's it! The platform will start all necessary services and be ready to use.
 
 ```
 agentarea/
-├── core/                    # Backend API and services (Python)
+├── agentarea-platform/     # Backend API and services (Python)
 │   ├── apps/               # Applications (API, Worker, CLI)
 │   └── libs/               # Shared libraries
-├── frontend/               # Web interface (React/Next.js)
+├── agentarea-webapp/       # Web interface (React/Next.js)
 ├── agentarea-mcp-manager/  # MCP server management (Go)
 ├── agent-placement/        # Agent orchestration (Node.js)
 ├── docs/                   # Documentation (Mintlify)

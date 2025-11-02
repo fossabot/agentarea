@@ -1,5 +1,5 @@
 .PHONY: help dev build up down restart down-clean \
-	frontend-dev docs-dev core-api core-worker core-test core-lint \
+	frontend-dev docs-dev agentarea-platform-api agentarea-platform-worker agentarea-platform-test agentarea-platform-lint \
 	k8s-setup k8s-test k8s-build-images helm-test \
 	mcp-start mcp-stop mcp-test \
 	test-e2e test-mcp cleanup-validation \
@@ -22,30 +22,30 @@ help: ## Display this help message
 ##@ Development - Frontend
 
 frontend-dev: ## Start frontend development server
-	cd frontend && npm run dev
+	cd agentarea-webapp && npm run dev
 
 docs-dev: ## Start documentation development server
 	cd docs && npm run dev
 
-##@ Development - Core (Python)
+##@ Development - Platform (Python)
 
-core-api: ## Run the API application
-	cd core && uv run --package agentarea-api uvicorn agentarea_api.main:app --reload --host 0.0.0.0 --port 8000
+agentarea-platform-api: ## Run the API application
+	cd agentarea-platform && uv run --package agentarea-api uvicorn agentarea_api.main:app --reload --host 0.0.0.0 --port 8000
 
-core-worker: ## Run the worker application
-	cd core && uv run --package agentarea-worker python -m agentarea_worker.main
+agentarea-platform-worker: ## Run the worker application
+	cd agentarea-platform && uv run --package agentarea-worker python -m agentarea_worker.main
 
-core-test: ## Run core Python tests
-	cd core && uv run pytest
+agentarea-platform-test: ## Run platform Python tests
+	cd agentarea-platform && uv run pytest
 
-core-lint: ## Lint core Python code
-	cd core && uv run ruff check && uv run pyright
+agentarea-platform-lint: ## Lint platform Python code
+	cd agentarea-platform && uv run ruff check && uv run pyright
 
-core-format: ## Format core Python code
-	cd core && uv run ruff format && uv run ruff check --fix
+agentarea-platform-format: ## Format platform Python code
+	cd agentarea-platform && uv run ruff format && uv run ruff check --fix
 
-core-sync: ## Sync core dependencies
-	cd core && uv sync --all-packages
+agentarea-platform-sync: ## Sync platform dependencies
+	cd agentarea-platform && uv sync --all-packages
 
 ##@ Development - Go MCP Manager
 

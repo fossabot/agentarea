@@ -4,7 +4,7 @@ services:
     image: agentarea-backend:latest
     container_name: agentarea-backend
     build:
-      context: core
+      context: agentarea-platform
       dockerfile: apps/api/Dockerfile
     ports:
       - "8000:8000"
@@ -37,9 +37,9 @@ services:
       - WORKFLOW__TEMPORAL_TASK_QUEUE=agent-tasks
       - SECRET_MANAGER_ENCRYPTION_KEY=${SECRET_MANAGER_ENCRYPTION_KEY}
     volumes:
-      - ./core/apps/api/agentarea_api:/app/apps/api/agentarea_api
-      - ./core/libs:/app/libs
-      - ./core/apps/api/alembic:/app/apps/api/alembic
+      - ./agentarea-platform/apps/api/agentarea_api:/app/apps/api/agentarea_api
+      - ./agentarea-platform/libs:/app/libs
+      - ./agentarea-platform/apps/api/alembic:/app/apps/api/alembic
       # - ${INFISICAL_TOKEN_VOLUME:-./.volumes/infisical-local-data}:/app/bootstrap
     depends_on:
       db:
@@ -64,7 +64,7 @@ services:
   app_migrations:
     image: agentarea-backend:latest
     build:
-      context: core
+      context: agentarea-platform
       dockerfile: apps/api/Dockerfile
     environment:
       ## Have to add it for now
@@ -81,7 +81,7 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
     volumes:
-      - ./core/apps/api/alembic:/app/apps/api/alembic
+      - ./agentarea-platform/apps/api/alembic:/app/apps/api/alembic
     depends_on:
       db:
         condition: service_healthy
@@ -268,7 +268,7 @@ services:
     labels:
       kompose.volume.type: configMap
     volumes:
-      - ./core/temporal-config:/etc/temporal/config/dynamicconfig
+      - ./agentarea-platform/temporal-config:/etc/temporal/config/dynamicconfig
     healthcheck:
       test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
       interval: 30s
@@ -305,7 +305,7 @@ services:
   # AgentArea Worker Service
   agentarea-worker:
     build:
-      context: core
+      context: agentarea-platform
       dockerfile: apps/worker/Dockerfile
     container_name: agentarea-worker
     depends_on:
@@ -346,8 +346,8 @@ services:
       - temporal-network
       - default
     volumes:
-      - ./core/apps/worker/agentarea_worker:/app/apps/worker/agentarea_worker
-      - ./core/libs:/app/libs
+      - ./agentarea-platform/apps/worker/agentarea_worker:/app/apps/worker/agentarea_worker
+      - ./agentarea-platform/libs:/app/libs
     restart: unless-stopped
     command: ["agentarea-worker", "dev"]
 

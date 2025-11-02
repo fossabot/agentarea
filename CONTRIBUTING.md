@@ -9,11 +9,11 @@ Thank you for your interest in contributing to AgentArea! This guide will help y
 ### 1. Development Setup
 ```bash
 # Fork and clone the repository
-git clone https://github.com/your-username/agentarea.git
+git clone https://github.com/agentarea/agentarea.git
 cd agentarea
 
 # Set up development environment
-cp core/docs/env.example .env
+cp agentarea-platform/docs/env.example .env
 docker compose -f docker-compose.dev.yaml up -d
 
 # Verify setup
