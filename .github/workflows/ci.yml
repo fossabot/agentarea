@@ -240,8 +240,8 @@ jobs:
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: bootstrap
-      context: bootstrap
-      dockerfile: bootstrap/Dockerfile
+      context: agentarea-bootstrap
+      dockerfile: agentarea-bootstrap/Dockerfile
       use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -250,7 +250,7 @@ jobs:
       DOCKER_REGISTRY_MIRROR_PATH: ${{ secrets.DOCKER_REGISTRY_MIRROR_PATH }}
       DOCKER_REGISTRY_MIRROR_USERNAME: ${{ secrets.DOCKER_REGISTRY_MIRROR_USERNAME }}
       DOCKER_REGISTRY_MIRROR_PASSWORD: ${{ secrets.DOCKER_REGISTRY_MIRROR_PASSWORD }}
-  docker-mcp-manager:
+  docker-agentarea-mcp-manager:
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
@@ -258,8 +258,8 @@ jobs:
     uses: ./.github/workflows/docker-build-push.yml
     with:
       component: mcp-manager
-      context: mcp-infrastructure/go-mcp-manager
-      dockerfile: mcp-infrastructure/go-mcp-manager/Dockerfile
+      context: agentarea-mcp-manager/go-mcp-manager
+      dockerfile: agentarea-mcp-manager/go-mcp-manager/Dockerfile
       use-private-registry: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

@@ -50,13 +50,13 @@ core-sync: ## Sync core dependencies
 ##@ Development - Go MCP Manager
 
 build-go: ## Build Go MCP manager
-	cd mcp-infrastructure/go-mcp-manager && go build ./...
+	cd agentarea-mcp-manager/go-mcp-manager && go build ./...
 
 lint-go: ## Lint Go code
-	cd mcp-infrastructure/go-mcp-manager && golangci-lint run --timeout=5m
+	cd agentarea-mcp-manager/go-mcp-manager && golangci-lint run --timeout=5m
 
 test-go: ## Run Go tests
-	cd mcp-infrastructure/go-mcp-manager && go test ./...
+	cd agentarea-mcp-manager/go-mcp-manager && go test ./...
 
 ##@ Docker - Development Environment
 
@@ -100,16 +100,16 @@ helm-test: ## Test Helm chart installation
 ##@ MCP Infrastructure
 
 mcp-start: ## Start MCP infrastructure
-	@bash mcp-infrastructure/scripts/start.sh
+	@bash agentarea-mcp-manager/scripts/start.sh
 
 mcp-stop: ## Stop MCP infrastructure
-	@bash mcp-infrastructure/scripts/stop.sh
+	@bash agentarea-mcp-manager/scripts/stop.sh
 
 mcp-test: ## Test MCP echo server
-	@bash mcp-infrastructure/scripts/test-mcp.sh
+	@bash agentarea-mcp-manager/scripts/test-mcp.sh
 
 mcp-test-echo: ## Test MCP echo server (detailed)
-	@bash mcp-infrastructure/scripts/test-echo.sh
+	@bash agentarea-mcp-manager/scripts/test-echo.sh
 
 ##@ Testing
 

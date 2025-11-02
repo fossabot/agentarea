@@ -121,7 +121,7 @@ agentarea/
 │   ├── apps/               # Applications (API, Worker, CLI)
 │   └── libs/               # Shared libraries
 ├── frontend/               # Web interface (React/Next.js)
-├── mcp-infrastructure/     # MCP server management (Go)
+├── agentarea-mcp-manager/  # MCP server management (Go)
 ├── agent-placement/        # Agent orchestration (Node.js)
 ├── docs/                   # Documentation (Mintlify)
 └── scripts/               # Development and deployment scripts

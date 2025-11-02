@@ -203,7 +203,7 @@ services:
       - /run
     volumes:
       - mcp_containers:/var/lib/containers/storage
-      - ./mcp-infrastructure/traefik:/etc/traefik:rw # Traefik configuration
+      - ./agentarea-mcp-manager/traefik:/etc/traefik:rw # Traefik configuration
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     networks:
       - mcp-network

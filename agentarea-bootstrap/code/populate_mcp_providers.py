@@ -107,7 +107,7 @@ def main() -> None:
     yaml_paths = [
         MCP_PROVIDERS_YAML,
         "data/mcp_providers.yaml",  # local development
-        "bootstrap/data/mcp_providers.yaml",  # alternative path
+        "agentarea-bootstrap/data/mcp_providers.yaml",  # alternative path
     ]
 
     yaml_data = None

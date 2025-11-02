@@ -74,7 +74,7 @@ python3 test_mcp_service.py --legacy
 ### Option 1: Automated Testing (Recommended)
 ```bash
 # Clone and navigate to the project
-cd mcp-infrastructure/go-mcp-manager
+cd agentarea-mcp-manager/go-mcp-manager
 
 # Run the complete test suite
 ./test_mcp.sh test
@@ -258,7 +258,7 @@ The test scripts are designed to work in CI/CD environments:
 # GitHub Actions example
 - name: Test MCP Service
   run: |
-    cd mcp-infrastructure/go-mcp-manager
+    cd agentarea-mcp-manager/go-mcp-manager
     ./test_mcp.sh test
 
 # Exit codes:

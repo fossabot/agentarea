@@ -55,9 +55,9 @@ AgentArea is a modular platform for building and running AI agents with the foll
 
 **Workspace Structure:**
 - `core/` - Python backend with uv workspace management
-- `frontend/` - Next.js frontend application  
-- `mcp-infrastructure/` - MCP (Model Context Protocol) server management in Go
-- `bootstrap/` - System initialization and data population
+- `frontend/` - Next.js frontend application
+- `agentarea-mcp-manager/` - MCP (Model Context Protocol) server management in Go
+- `agentarea-bootstrap/` - System initialization and data population
 
 **Backend Libraries (core/libs/):**
 - `agentarea-common` - Shared utilities, config, database, events

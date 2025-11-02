@@ -253,7 +253,7 @@ agentarea/
 │   ├── src/                # Source code
 │   ├── components/         # Reusable components
 │   └── pages/              # Page components
-├── mcp-infrastructure/     # MCP server management
+├── agentarea-mcp-manager/  # MCP server management
 │   └── go-mcp-manager/     # Go-based MCP manager
 ├── docs/                   # User documentation
 └── scripts/               # Development and deployment scripts

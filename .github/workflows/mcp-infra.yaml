@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'mcp-infrastructure/**'
+      - 'agentarea-mcp-manager/**'
       - '.github/workflows/mcp-infra.yaml'
   pull_request:
     branches: [main]
     paths:
-      - 'mcp-infrastructure/**'
+      - 'agentarea-mcp-manager/**'
       - '.github/workflows/mcp-infra.yaml'
 
 concurrency:
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: mcp-infrastructure/go-mcp-manager
+        working-directory: agentarea-mcp-manager/go-mcp-manager
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +46,7 @@ jobs:
         uses: golangci/golangci-lint-action@v4
         with:
           version: v1.58.2
-          working-directory: mcp-infrastructure/go-mcp-manager
+          working-directory: agentarea-mcp-manager/go-mcp-manager
           args: --timeout=5m
 
       - name: Go vet
@@ -58,7 +58,7 @@ jobs:
     needs: lint
     defaults:
       run:
-        working-directory: mcp-infrastructure/go-mcp-manager
+        working-directory: agentarea-mcp-manager/go-mcp-manager
     steps:
       - uses: actions/checkout@v4
 
@@ -88,5 +88,5 @@ jobs:
         with:
           name: mcp-infra-test-artifacts
           path: |
-            mcp-infrastructure/go-mcp-manager/coverage.out
-            mcp-infrastructure/go-mcp-manager/test-report.txt
+            agentarea-mcp-manager/go-mcp-manager/coverage.out
+            agentarea-mcp-manager/go-mcp-manager/test-report.txt

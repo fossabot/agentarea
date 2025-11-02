@@ -12,7 +12,7 @@ A secure, scalable infrastructure for running Model Context Protocol (MCP) servi
 ## 📁 Directory Structure
 
 ```
-mcp-infrastructure/
+agentarea-mcp-manager/
 ├── go-mcp-manager/         # Go-based MCP Manager (main application)
 ├── docker-compose.yml      # Docker Compose deployment
 ├── traefik/                # Traefik configuration for Docker Compose backend
@@ -29,7 +29,7 @@ mcp-infrastructure/
 
 ```bash
 # Start the infrastructure
-cd mcp-infrastructure
+cd agentarea-mcp-manager
 docker-compose up -d
 
 # Check health
@@ -148,7 +148,7 @@ The infrastructure consists of:
 ### 1. Clone and Build
 
 ```bash
-cd mcp-infrastructure
+cd agentarea-mcp-manager
 docker-compose -f docker/traefik/docker-compose.yml up -d
 ```
 
