@@ -1,0 +1,74 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Select release type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install bumpversion
+        run: pip install bumpversion
+
+      - name: Bump version
+        id: get-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          type="${{ github.event.inputs.release_type }}"
+          bumpversion $type --allow-dirty
+          new_version=$(cat VERSION)
+          echo "VERSION=v${new_version}" >> $GITHUB_OUTPUT
+          echo "Bumped version to v${new_version}"
+
+      - name: Update Helm chart appVersion
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/update-appversion.py
+
+      - name: Create release branch and PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "Release ${{ steps.get-version.outputs.VERSION }}"
+          branch: "release/${{ steps.get-version.outputs.VERSION }}"
+          body: |
+            ## Release ${{ steps.get-version.outputs.VERSION }}
+
+            This PR contains version bumps for release ${{ steps.get-version.outputs.VERSION }}.
+
+            ### Changes
+            - Bumped version across all packages to ${{ steps.get-version.outputs.VERSION }}
+            - Updated Helm chart appVersion
+
+            ### Checklist
+            - [ ] Review version changes
+            - [ ] Verify all package versions are updated correctly
+            - [ ] Add release notes to CHANGELOG (if applicable)
+            - [ ] Merge this PR to trigger automated build and publish
+
+            **Note:** Merging this PR will automatically trigger the release pipeline to build Docker images, publish Helm charts, and create a Git tag.
+          labels: release
+          commit-message: "chore(release): bump versions to ${{ steps.get-version.outputs.VERSION }}"
