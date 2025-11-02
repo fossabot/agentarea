@@ -11,6 +11,16 @@ on:
           - patch
           - minor
           - major
+          - prerelease
+          - prenum
+      prerelease_type:
+        description: 'Prerelease type (only for prerelease/prenum)'
+        required: false
+        type: choice
+        options:
+          - alpha
+          - beta
+          - rc
 
 jobs:
   prepare-release:
@@ -37,10 +47,33 @@ jobs:
         run: |
           set -euo pipefail
           type="${{ github.event.inputs.release_type }}"
-          bumpversion $type --allow-dirty
+
+          # For prerelease types, set the prerelease type first if specified
+          if [[ "$type" == "prerelease" ]] && [[ -n "${{ github.event.inputs.prerelease_type }}" ]]; then
+            # Get current version to check if we need to initialize prerelease
+            current=$(cat VERSION)
+            if [[ ! "$current" =~ -(${{ github.event.inputs.prerelease_type }})\. ]]; then
+              # Not currently on this prerelease type, so bump to it
+              bumpversion prerelease --new-version="${current}-${{ github.event.inputs.prerelease_type }}.1" --allow-dirty
+            else
+              # Already on this prerelease type, just bump prenum
+              bumpversion prenum --allow-dirty
+            fi
+          else
+            # Standard version bump (patch/minor/major/prenum)
+            bumpversion $type --allow-dirty
+          fi
+
           new_version=$(cat VERSION)
           echo "VERSION=v${new_version}" >> $GITHUB_OUTPUT
           echo "Bumped version to v${new_version}"
+
+          # Determine if this is a prerelease
+          if [[ "$new_version" =~ -[a-z]+\.[0-9]+ ]]; then
+            echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
+          else
+            echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Update Helm chart appVersion
         shell: bash
@@ -55,9 +88,9 @@ jobs:
           title: "Release ${{ steps.get-version.outputs.VERSION }}"
           branch: "release/${{ steps.get-version.outputs.VERSION }}"
           body: |
-            ## Release ${{ steps.get-version.outputs.VERSION }}
+            ## ${{ steps.get-version.outputs.IS_PRERELEASE == 'true' && 'Prerelease' || 'Release' }} ${{ steps.get-version.outputs.VERSION }}
 
-            This PR contains version bumps for release ${{ steps.get-version.outputs.VERSION }}.
+            This PR contains version bumps for ${{ steps.get-version.outputs.IS_PRERELEASE == 'true' && 'prerelease' || 'release' }} ${{ steps.get-version.outputs.VERSION }}.
 
             ### Changes
             - Bumped version across all packages to ${{ steps.get-version.outputs.VERSION }}
@@ -69,6 +102,7 @@ jobs:
             - [ ] Add release notes to CHANGELOG (if applicable)
             - [ ] Merge this PR to trigger automated build and publish
 
-            **Note:** Merging this PR will automatically trigger the release pipeline to build Docker images, publish Helm charts, and create a Git tag.
+            **Note:** Merging this PR will automatically trigger the release pipeline to:
+            ${{ steps.get-version.outputs.IS_PRERELEASE == 'true' && '- Build and push Docker images with prerelease tags\n- Create a GitHub prerelease\n- Create a Git tag\n\n**Prerelease artifacts will NOT include Helm charts or latest tags**' || '- Build and push Docker images with version and latest tags\n- Publish Helm charts\n- Create a GitHub release\n- Create a Git tag' }}
           labels: release
           commit-message: "chore(release): bump versions to ${{ steps.get-version.outputs.VERSION }}"
