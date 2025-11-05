@@ -2,18 +2,19 @@
 
 version: v1.3.1
 
-# DSN is overridden via docker-compose environment variable
-# Default for reference: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/kratos
-dsn: postgres://postgres:postgres@db:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
+# DSN is overridden via docker-compose environment variable via -c flag
+# The docker-compose passes DSN through the environment variable
+dsn: ${DSN}
 
 serve:
   public:
-    base_url: http://localhost:4433/
+    base_url: http://kratos:4433/
     cors:
       enabled: true
       allowed_origins:
         - http://localhost:3000
         - http://localhost:3001
+        - http://frontend:3000
       allowed_methods:
         - POST
         - GET
@@ -28,7 +29,7 @@ serve:
         - Content-Type
         - Set-Cookie
   admin:
-    base_url: http://localhost:4434/
+    base_url: http://kratos:4434/
 
 selfservice:
   default_browser_return_url: http://localhost:3000/
@@ -37,6 +38,9 @@ selfservice:
     - http://localhost:3001
     - http://localhost:3000/workplace
     - http://localhost:3000/dashboard
+    - http://frontend:3000
+    - http://frontend:3000/workplace
+    - http://frontend:3000/dashboard
 
   flows:
     error:

@@ -72,13 +72,6 @@ Built-in Keto integration for fine-grained access control. Relationship-based ac
 </tr>
 </table>
 
-### 🗺️ Roadmap
-
-- **Python Agent Deployment**: Deploy agents written as Python code
-- **Agent Versioning**: Version control for agent configurations
-- **MCP Updates**: Hot-reload MCP server updates
-- **Hydra Integration**: OAuth2 and OIDC for agent authentication
-
 ### 🎬 See It In Action
 
 > 📸 *Screenshots and demo GIFs coming soon! [Contribute yours](https://github.com/agentarea/agentarea/discussions)*
@@ -128,23 +121,6 @@ agentarea/
 ```
 
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](docs/contributing.md) for details on:
-
-- Development setup
-- Code style guidelines
-- Pull request process
-- Community guidelines
-
-### Quick Contributing Steps
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## 🏗️ Architecture
 
 AgentArea is built for production agentic workloads with:
@@ -172,29 +148,12 @@ See our [full roadmap](docs/roadmap.md) for more details.
 
 ## 🌟 Community
 
-Join our growing community of AI developers and contributors!
+Join our community of AI developers:
 
-- **💬 Discord**: [Join our Discord server](https://discord.gg/93jVZ4Kx) - Get help, share ideas, and connect with the community
-- **💭 GitHub Discussions**: [General discussions, Q&A, and feature requests](https://github.com/agentarea/agentarea/discussions)
+- **💬 Discord**: [Get help and share ideas](https://discord.gg/93jVZ4Kx)
+- **💭 GitHub Discussions**: [Q&A and feature requests](https://github.com/agentarea/agentarea/discussions)
 - **🐛 Issues**: [Bug reports and feature requests](https://github.com/agentarea/agentarea/issues)
-- **🤝 Contributing**: [Contribution guidelines](CONTRIBUTING.md)
-- **🐦 Twitter/X**: Follow us for updates [@agentarea](https://twitter.com/agentarea)
-
-### 🎯 Ways to Contribute
-
-- **Code**: Submit pull requests for bug fixes and new features
-- **Documentation**: Help improve our docs
-- **Community**: Answer questions and help others
-- **Feedback**: Share your experience and suggestions
-- **Showcase**: Share projects built with AgentArea
-
-### 🌟 Show Your Support
-
-If you find AgentArea helpful, please consider:
-- ⭐ Starring the repository
-- 🐦 Sharing on social media
-- 📝 Writing a blog post or tutorial
-- 💬 Joining our Discord community
+- **🐦 Twitter/X**: [Follow for updates](https://twitter.com/agentarea)
 
 ## 📄 License
 
