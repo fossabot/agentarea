@@ -2,376 +2,246 @@
 
 ![AgentArea Logo](images/agentarea-cover.jpg)
 
-## The Enterprise Platform for Governed Agentic Networks
 
-Build production-grade multi-agent systems with built-in governance, compliance controls, and network-level isolation.
+**Build, deploy, and manage AI agents at scale**
 
 [![License](https://img.shields.io/badge/license-EPLv2-blue.svg)](LICENSE.md)
-[![CI](https://github.com/agentarea/agentarea/actions/workflows/ci.yml/badge.svg)](https://github.com/agentarea/agentarea/actions/workflows/ci.yml)
+[![CI](https://github.com/agentarea/agentarea/workflows/CI/badge.svg)](https://github.com/agentarea/agentarea/actions)
+[![Documentation](https://img.shields.io/badge/docs-mintlify-green.svg)](https://docs.agentarea.dev)
+[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?color=5865F2&label=discord&logo=discord&logoColor=white)](https://discord.gg/93jVZ4Kx)
 [![GitHub Stars](https://img.shields.io/github/stars/agentarea/agentarea?style=social)](https://github.com/agentarea/agentarea/stargazers)
-[![Discord](https://img.shields.io/discord/1375237948982821005?color=5865F2&label=discord&logo=discord&logoColor=white)](https://discord.gg/5tduPwheYQ)
-[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)]() [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)]() [![Go](https://img.shields.io/badge/Go-1.24+-blue.svg)]()
+[![GitHub Forks](https://img.shields.io/github/forks/agentarea/agentarea?style=social)](https://github.com/agentarea/agentarea/network/members)
 
-[📖 Docs](https://docs.agentarea.ai) •
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](https://golang.org)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://docker.com)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-ready-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io)
+
+[📖 Documentation](https://docs.agentarea.dev) •
 [🚀 Quick Start](#-quick-start) •
-[🔗 Architecture](#-architecture) •
-[💬 Discord](https://discord.gg/5tduPwheYQ) •
+[💬 Discord](https://discord.gg/93jVZ4Kx) •
 [🐛 Report Bug](https://github.com/agentarea/agentarea/issues/new?template=bug_report.md) •
 [✨ Request Feature](https://github.com/agentarea/agentarea/issues/new?template=feature_request.md)
 
----
-
-## The Governance Gap
-
-Traditional agent frameworks (LangChain, AutoGPT, CrewAI) were designed for single-agent prototypes. **When deploying to production**, you face a critical gap:
-
-- ❌ No native approval workflows for sensitive operations
-- ❌ No network-level isolation between agent groups
-- ❌ No built-in RBAC or secret boundaries
-
-**AgentArea is purpose-built to close this gap.** We combine agentic orchestration with enterprise governance—not as an add-on, but as core architecture.
+</div>
 
 ---
 
-## What Makes AgentArea Different
+## 🚀 What is AgentArea?
+
+AgentArea is an open-source platform for building, deploying, and managing AI agents at scale. Whether you're creating simple chatbots or complex multi-agent systems, AgentArea provides the tools and infrastructure you need.
+
+### ✨ Key Features
 
 <table>
 <tr>
 <td width="50%">
 
-### 🌐 Agentic Networks First
-VPC-inspired architecture where agents communicate via A2A protocol with granular network permissions. Build isolated agent groups that control who talks to whom.
+#### 🤖 Multi-Agent Communication
+Enable agents to collaborate and work together seamlessly. Build complex workflows with multiple specialized agents.
 
-### 🛡️ Governance Built-In
-Approve sensitive tool calls before execution. Enforce role-based access control. Governance is native—not a plugin.
+#### 🔌 MCP Integration
+Built-in Model Context Protocol support for external tools and services. Extend your agents with custom capabilities.
 
-### 🔗 A2A Protocol
-Native agent-to-agent communication standard. Agents discover, connect, and collaborate securely. Enable agent teams and hierarchical structures natively.
-
-### 📊 Compliance-Ready
-Permission boundaries by design. Secret management with multiple backends (Vault, Infisical, AWS). Ready for healthcare, finance, regulated industries.
+#### 📈 Scalable Infrastructure
+Docker and Kubernetes-ready deployment. Scale from prototype to production effortlessly.
 
 </td>
 <td width="50%">
 
-### ⚡ Production Infrastructure
-Temporal-based durable execution. Kubernetes-native architecture. Edge deployment support. Multi-LLM via LiteLLM proxy. Built to scale.
+#### 🛠️ Developer-Friendly
+RESTful APIs and comprehensive SDKs. Start building in minutes with our quickstart guides.
 
-### 🔌 MCP Server Management
-Create, host, and manage MCP servers. Add remote MCPs with hash verification. Extend agent capabilities securely with external tools.
+#### 📊 Real-time Monitoring
+Performance analytics and debugging tools. Track agent behavior and optimize performance.
 
-### 🤖 Flexible Agent Creation
-Custom instructions and tool configurations. Long-running tasks with flexible termination. Human-in-the-loop workflows for critical decisions.
-
-### 🏗️ Open Core, Enterprise Options
-Core platform is 100% open source (EPLv2). Enterprise features for air-gapped deployment, advanced RBAC, SLA support available for organizations at scale.
+#### 🔒 Enterprise-Ready
+Security, compliance, and role-based access control. Production-ready from day one.
 
 </td>
 </tr>
 </table>
 
----
+### 🎬 See It In Action
 
-## 🎯 Built for Production
+> 📸 *Screenshots and demo GIFs coming soon! [Contribute yours](https://github.com/agentarea/agentarea/discussions)*
 
-AgentArea is purpose-built for regulated industries and enterprise deployments:
-
-### Healthcare & Life Sciences
-"Deploy automated clinical workflows with physician approval workflows. Sensitive decisions require human sign-off before execution."
-
-**Features used:** Approval workflows, Secret management
-
-### Financial Services
-"Multi-agent trading, loan processing, and fraud detection with compliance guardrails. Network isolation prevents information leakage between agent teams."
-
-**Features used:** Agent networks, Tool permissions, RBAC
-
-### Regulated Document Processing
-"Legal, insurance, and government document automation with approval queues."
-
-**Features used:** Approval workflows, A2A protocol for document routing
-
-### Enterprise Data Operations
-"Deploy agent networks for ETL, reporting, and analytics with permission boundaries by design. Prevent unauthorized data access across agent groups."
-
-**Features used:** Agentic networks, Permission boundaries, MCP extensions
-
----
-
-## 📊 Capability Comparison
-
-How AgentArea compares to traditional agent frameworks:
-
-| Capability | Traditional Frameworks | AgentArea |
-|---|---|---|
-| **Single Agent Support** | ✅ Full | ✅ Full |
-| **Multi-Agent Networks** | ⚠️ Basic loops | ✅ Network-native (A2A) |
-| **Approval Workflows** | ❌ Custom code | ✅ Built-in |
-| **Tool Permissions** | ❌ Not enforced | ✅ Granular RBAC |
-| **Network Isolation** | ❌ None | ✅ VPC-inspired |
-| **Governance** | ❌ Not designed for | ✅ Core feature |
-| **Production Execution** | ⚠️ Temporal plug-in | ✅ Native integration |
-
----
-
-## 🚀 Quick Start
+## 🏃‍♂️ Quick Start
 
 ### Prerequisites
 
-- **Docker & Docker Compose** (v2.0+)
-- **8GB RAM** minimum, **16GB recommended**
-- **10GB free disk space**
+- Docker (v20.10+) & Docker Compose (v2.0+)
+- Python 3.11+
+- Node.js 18+
+- Go 1.25+ (for MCP infrastructure)
 
-### Installation (2 minutes)
+### Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/agentarea/agentarea.git
 cd agentarea
 
-# Start the platform
-make up
+# Start the development environment
+make dev-up
 
-# Platform is ready at http://localhost:3000
+# Verify installation
+curl http://localhost:8000/health
 ```
 
-### Verify Installation
+### Create Your First Agent
 
 ```bash
-# Check all services are running
-docker compose ps
-
-# Expected output:
-# NAME                      STATUS
-# agentarea-api            Up 2 minutes
-# agentarea-worker         Up 2 minutes
-# agentarea-webapp         Up 2 minutes
-# agentarea-mcp-manager    Up 2 minutes
-# postgresql               Up 2 minutes
-# redis                    Up 2 minutes
-# temporal                 Up 2 minutes
+# Create a simple chatbot agent
+curl -X POST http://localhost:8000/v1/agents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My First Agent",
+    "template": "chatbot",
+    "model": "gpt-4"
+  }'
 ```
-
-### First Agent (10 lines)
-
-```python
-from agentarea import Agent, Tool, Network
-
-# Create a network with governance
-network = Network(name="customer_support", approval_required=True)
-
-# Define an agent with controlled tools
-agent = Agent(
-    name="support_agent",
-    instructions="Help customers with their issues",
-    tools=[Tool(name="refund", requires_approval=True)],
-    network=network
-)
-
-# Run the agent
-result = agent.run("Process refund for order #123")
-# → Approval request created (human review required)
-```
-
-**What's Next?** [Building Your First Agent](docs/getting-started.md) • [Multi-Agent Networks](docs/agent-communication.md) • [Production Deployment](docs/deployment.md)
-
----
-
-## 🏗️ Architecture
-
-AgentArea combines agentic orchestration with enterprise governance:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Web Interface (Next.js)                  │
-│                  http://localhost:3000                      │
-└─────────────┬───────────────────────────────────────────────┘
-              │
-┌─────────────▼───────────────────────────────────────────────┐
-│                   API Gateway (FastAPI)                     │
-│              Authentication • Authorization                 │
-└─────────────┬───────────────────────────────────────────────┘
-              │
-    ┌─────────┼─────────────┬──────────────┐
-    │         │             │              │
-┌───▼──┐  ┌──▼──────┐  ┌───▼────┐  ┌────▼──────┐
-│ Task │  │ Secrets │  │Approval│  │  Audit    │
-│Queue │  │ Manager │  │ Queue  │  │  Trail    │
-└───┬──┘  └──┬──────┘  └───┬────┘  └────┬──────┘
-    │        │             │            │
-┌───▼────────▼─────────────▼────────────▼───┐
-│         Agent Networks Layer               │
-│  • VPC-inspired Isolation                 │
-│  • A2A Protocol Communication             │
-│  • Granular Permissions (ReBAC)           │
-│  • Event-Driven Triggers                  │
-└───────┬──────────────────────────┬────────┘
-        │                          │
-    ┌───▼──────┐            ┌─────▼──────┐
-    │ Temporal  │            │    MCP     │
-    │ Executor  │            │  Manager   │
-    │(Workflows)│            │ (Go/Podman)│
-    └───┬──────┘            └─────┬──────┘
-        │                         │
-    ┌───▼──────────────────────────▼──┐
-    │  PostgreSQL • Redis • Temporal   │
-    │      (Event sourcing layer)      │
-    └────────────────────────────────┘
-```
-
-**Key Components:**
-- **Agent Networks:** VPC-inspired isolation with granular permissions
-- **A2A Protocol:** Native agent-to-agent communication
-- **Temporal:** Distributed workflow orchestration for long-running agent tasks
-- **Approval Queue:** Human-in-the-loop for sensitive operations
-- **MCP Manager:** External tool management with security controls
-
-For detailed architecture, see [docs/architecture.md](docs/architecture.md).
-
----
 
 ## 📚 Documentation
 
-- **[Getting Started](docs/getting-started.md)** - Installation, first agent
-- **[Building Agents](docs/building-agents.md)** - Agent creation and customization
-- **[Agentic Networks](docs/agent-networks.md)** - Network architecture and isolation
-- **[Agent Communication](docs/agent-communication.md)** - A2A protocol and multi-agent workflows
-- **[Governance & Approvals](docs/governance.md)** - Approval workflows
+- **[Getting Started](docs/getting-started.md)** - Complete setup guide
+- **[Building Agents](docs/building-agents.md)** - Create and customize AI agents
+- **[Agent Communication](docs/agent-communication.md)** - Multi-agent workflows
 - **[MCP Integration](docs/mcp-integration.md)** - External tool integration
-- **[Deployment](docs/deployment.md)** - Docker, Kubernetes, production
+- **[Deployment](docs/deployment.md)** - Production deployment guide
 - **[API Reference](docs/api-reference.md)** - Complete API documentation
-- **[Architecture](docs/architecture.md)** - Deep dive on system design
-
----
 
 ## 🛠️ Project Structure
 
 ```
 agentarea/
-├── agentarea-platform/          # Backend (Python monorepo)
-│   ├── apps/
-│   │   ├── api/                 # FastAPI REST API
-│   │   ├── worker/              # Temporal workflow execution
-│   │   └── cli/                 # Python CLI
-│   └── libs/                    # Shared libraries (agents, mcp, execution, etc.)
-│
-├── agentarea-webapp/            # Web UI (Next.js + React)
-│   └── src/
-│       ├── app/                 # App router pages
-│       ├── components/          # React components
-│       └── services/            # API clients
-│
-├── agentarea-mcp-manager/       # MCP server orchestration (Go)
-│   └── cmd/                     # Main service
-│
-├── agentarea-cli/               # Terminal CLI (Node.js/TypeScript)
-│   └── src/
-│
-├── agentarea-bootstrap/         # Initialization service
-│   └── code/                    # Database setup, seeding
-│
-├── docs/                        # Documentation (Mintlify)
-├── scripts/                     # Development & deployment scripts
-└── docker-compose.yaml          # Full stack orchestration
+├── core/                    # Backend API and services (Python)
+│   ├── apps/               # Applications (API, Worker, CLI)
+│   └── libs/               # Shared libraries
+├── frontend/               # Web interface (React/Next.js)
+├── mcp-infrastructure/     # MCP server management (Go)
+├── agent-placement/        # Agent orchestration (Node.js)
+├── docs/                   # Documentation (Mintlify)
+└── scripts/               # Development and deployment scripts
 ```
 
----
 
-## 🌟 Enterprise & Scale
+## 🤝 Contributing
 
-### Evaluating for Production?
+We welcome contributions! Please see our [Contributing Guide](docs/contributing.md) for details on:
 
-AgentArea is production-ready with Temporal, Kubernetes, and enterprise features:
+- Development setup
+- Code style guidelines
+- Pull request process
+- Community guidelines
 
-- ✅ **Self-hosted** - Deploy to your infrastructure with Docker or Kubernetes
-- ✅ **Air-gapped** - Run fully offline with no cloud connectivity required
-- ✅ **Compliance** - HIPAA-ready architecture with secret management
-- ✅ **Scale** - Built on Temporal for long-running, resilient agent tasks
+### Quick Contributing Steps
 
-**[Schedule a technical walkthrough →](https://calendly.com/agentarea/enterprise)**
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Open Core Model
+## 🏗️ Architecture
 
-**Open Source (EPLv2):**
-- Full platform and all core features
-- Agentic networks with A2A protocol
-- Governance and approval workflows
-- Community support via Discord
+AgentArea follows a microservices architecture with:
 
-**Enterprise Add-ons** (optional, for organizations at scale):
-- Advanced RBAC with custom policies
-- SSO/SAML integration
-- Priority support & SLAs
-- Air-gapped deployment assistance
-- Custom security reviews
+- **FastAPI Backend**: RESTful API and business logic
+- **React Frontend**: Modern web interface
+- **PostgreSQL**: Primary database
+- **Redis**: Message queue and caching
+- **Go MCP Manager**: External tool integration
+- **Docker**: Containerized deployment
 
-[Learn more about Enterprise →](https://docs.agentarea.ai/enterprise)
+For detailed architecture information, see [docs/architecture.md](docs/architecture.md).
 
----
+## 🚀 Deployment
+
+### Development
+
+```bash
+make dev-up      # Start development environment
+make dev-down    # Stop development environment
+make dev-logs    # View logs
+```
+
+### Production
+
+```bash
+# Docker Compose
+docker-compose -f docker-compose.prod.yml up -d
+
+# Kubernetes
+kubectl apply -f k8s/
+```
+
+See [docs/deployment.md](docs/deployment.md) for comprehensive deployment guides.
+
+## 📊 Monitoring
+
+AgentArea includes built-in monitoring with:
+
+- **Metrics**: Prometheus + Grafana dashboards
+- **Logging**: Structured JSON logging
+- **Tracing**: Distributed tracing with Jaeger
+- **Health Checks**: Kubernetes-ready health endpoints
+
+## 🛡️ Security
+
+- **Authentication**: JWT-based API authentication
+- **Authorization**: Role-based access control (RBAC)
+- **Secrets Management**: Vault integration
+- **Network Security**: TLS encryption, secure defaults
+- **Compliance**: SOC 2 Type II, GDPR ready
 
 ## 📈 Roadmap
 
-- [x] Core agent framework with governance
-- [x] Multi-agent communication (A2A protocol)
-- [x] Approval workflows
+- [x] Basic agent creation and management
+- [x] Multi-agent communication
 - [x] MCP protocol integration
-- [x] Docker and Kubernetes support
-- [ ] Visual workflow designer
-- [ ] Advanced RBAC (relationship-based)
-- [ ] Enterprise SAML/SSO
-- [ ] Analytics dashboard
-- [ ] Edge agent deployment
+- [x] Docker deployment
+- [ ] Kubernetes operator
+- [ ] Visual agent workflow designer
+- [ ] Enterprise SSO integration
+- [ ] Advanced analytics dashboard
 
-[View full roadmap →](docs/roadmap.md)
+See our [full roadmap](docs/roadmap.md) for more details.
 
----
+## 🌟 Community
 
-## 💬 Community & Support
+Join our growing community of AI developers and contributors!
 
-Join engineers building governed agent systems:
+- **💬 Discord**: [Join our Discord server](https://discord.gg/93jVZ4Kx) - Get help, share ideas, and connect with the community
+- **💭 GitHub Discussions**: [General discussions, Q&A, and feature requests](https://github.com/agentarea/agentarea/discussions)
+- **🐛 Issues**: [Bug reports and feature requests](https://github.com/agentarea/agentarea/issues)
+- **🤝 Contributing**: [Contribution guidelines](CONTRIBUTING.md)
+- **🐦 Twitter/X**: Follow us for updates [@agentarea](https://twitter.com/agentarea)
 
-- **[Discord Community](https://discord.gg/5tduPwheYQ)** - Get help, share ideas, discuss approaches
-- **[GitHub Discussions](https://github.com/agentarea/agentarea/discussions)** - Q&A, feature requests, use cases
-- **[GitHub Issues](https://github.com/agentarea/agentarea/issues)** - Bug reports and feature requests
-- **[Documentation](https://docs.agentarea.ai)** - Guides, API docs, examples
+### 🎯 Ways to Contribute
 
-**For Enterprise Teams:**
-- **[Schedule Technical Walkthrough](https://calendly.com/agentarea/enterprise)** - Architecture review, compliance discussion
-- **[Security Review](mailto:security@agentarea.ai)** - SOC 2, penetration testing, compliance questions
+- **Code**: Submit pull requests for bug fixes and new features
+- **Documentation**: Help improve our docs
+- **Community**: Answer questions and help others
+- **Feedback**: Share your experience and suggestions
+- **Showcase**: Share projects built with AgentArea
 
----
+### 🌟 Show Your Support
 
-## ❓ FAQ for Enterprise Teams
-
-**Q: Can AgentArea run in air-gapped (offline) environments?**
-A: Yes. AgentArea is fully self-hosted. Deploy to your VPC with no cloud connectivity required.
-
-**Q: What compliance standards does AgentArea support?**
-A: Built-in features for HIPAA, SOC 2, and general compliance: secret management, RBAC, encryption at rest/transit.
-
-**Q: How does governance compare to building approval systems ourselves?**
-A: Governance is core architecture—not a plugin. Approval workflows and permissions are native, integrated with agent execution from day one.
-
-**Q: Can we integrate AgentArea with our existing LLM infrastructure?**
-A: Yes. Multi-LLM support via LiteLLM proxy. Works with OpenAI, Claude, Llama, and other providers.
-
-**Q: What's the difference between open source and enterprise editions?**
-A: Core platform is fully open (EPLv2). Enterprise features add advanced RBAC, SSO, and priority support for large organizations.
-
-**Q: How does it handle long-running agent tasks?**
-A: Native Temporal integration. Agents can run for hours/days with automatic retry, durable state, and resilience built-in.
-
----
+If you find AgentArea helpful, please consider:
+- ⭐ Starring the repository
+- 🐦 Sharing on social media
+- 📝 Writing a blog post or tutorial
+- 💬 Joining our Discord community
 
 ## 📄 License
 
-Licensed under the Eclipse Public License v2.0 (EPLv2). Commercial licensing available. See [LICENSE](LICENSE) file for details.
-
----
+This project is licensed under the Eclipse Public License v2.0 (EPLv2) - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-AgentArea is built on excellent open-source projects. See [NOTICE](NOTICE) file for complete attribution.
+AgentArea is built on top of many excellent open-source projects. See our [NOTICE](NOTICE) file for complete attribution.
 
 ---
 
@@ -381,9 +251,13 @@ AgentArea is built on excellent open-source projects. See [NOTICE](NOTICE) file 
 
 [![Star History Chart](https://api.star-history.com/svg?repos=agentarea/agentarea&type=Date)](https://star-history.com/#agentarea/agentarea&Date)
 
+### 🙌 Built With AgentArea
+
+*Showcase your project here! [Submit via PR](https://github.com/agentarea/agentarea/pulls) or [Discussion](https://github.com/agentarea/agentarea/discussions)*
+
 ---
 
-**Building governed agent systems?** [Try AgentArea →](https://docs.agentarea.ai/getting-started) • [Star us on GitHub →](https://github.com/agentarea/agentarea) • [Join Discord →](https://discord.gg/5tduPwheYQ)
+**[⭐ Star us on GitHub](https://github.com/agentarea/agentarea) • [📖 Read the Docs](https://docs.agentarea.dev) • [💬 Join Discord](https://discord.gg/93jVZ4Kx) • [🐦 Follow on Twitter](https://twitter.com/agentarea)**
 
 Made with ❤️ by the AgentArea community
 
