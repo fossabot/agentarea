@@ -2,10 +2,11 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, Paperclip, Send } from "lucide-react";
+import { ChevronDown, Paperclip, ArrowUp } from "lucide-react";
 import { AttachmentCard } from "@/components/ui/attachment-card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { env } from "@/env";
 import { useSSE } from "@/hooks/useSSE";
 import { cn } from "@/lib/utils";
@@ -136,22 +137,26 @@ export default function FullChat({
 
   // Auto-scroll to bottom when messages change (only if user was at bottom)
   useEffect(() => {
-    if (isAtBottom) {
+    if (isAtBottom && messagesContainerRef.current) {
       // Отменяем предыдущий RAF если он есть
       if (scrollRAFRef.current) {
         cancelAnimationFrame(scrollRAFRef.current);
       }
 
-      // Используем requestAnimationFrame для более плавного скролла
+      // Используем прямую прокрутку контейнера вместо scrollIntoView
+      // чтобы не прокручивать всю страницу
       scrollRAFRef.current = requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const container = messagesContainerRef.current;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
 
         // Проверяем позицию после скролла
         scrollRAFRef.current = requestAnimationFrame(() => {
           const atBottom = checkIfAtBottom();
-          if (!atBottom) {
+          if (!atBottom && messagesContainerRef.current) {
             // Принудительно скроллим еще раз если не достигли низа
-            messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
           }
         });
       });
@@ -670,11 +675,12 @@ export default function FullChat({
       className={cn(
         "mx-auto flex h-full w-full flex-col gap-0 overflow-hidden rounded-lg transition-all duration-700 ease-out",
         "transition-all duration-700 ease-out",
+        "justify-between",
         // hasUserMessages ? 'justify-between border bg-chatBackground' : 'justify-center')}>
-        className,
-        hasUserMessages
-          ? "justify-between border border-b-0 bg-chatBackground"
-          : "justify-between"
+        // className,
+        // hasUserMessages
+        //   ? "justify-between border border-b-0 bg-chatBackground"
+        //   : "justify-between"
       )}
     >
       {!hasUserMessages && placeholder ? (
@@ -745,8 +751,10 @@ export default function FullChat({
         >
           <Button
             onClick={() => {
-              // Принудительно скроллим к низу
-              messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+              // Принудительно скроллим к низу контейнера, а не всей страницы
+              if (messagesContainerRef.current) {
+                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+              }
 
               // Проверяем позицию после скролла
               requestAnimationFrame(() => {
@@ -766,9 +774,9 @@ export default function FullChat({
           "card mx-auto w-full cursor-auto bg-white hover:shadow-none dark:bg-zinc-900",
           "px-2 pb-2 pt-0",
           // "transition-width transition-height duration-500 ease-out transition-border-none",
-          hasUserMessages
-            ? "max-w-full rounded-t-none border-l-0 border-r-0"
-            : "w-full max-w-5xl"
+          // hasUserMessages
+          //   ? "max-w-full rounded-t-none border-l-0 border-r-0"
+          //   : "w-full max-w-5xl"
         )}
       >
         <form
@@ -809,7 +817,7 @@ export default function FullChat({
                 size="sm"
                 onClick={openFileDialog}
                 disabled={isLoading}
-                className="h-10 w-10 rounded-full p-0 hover:bg-zinc-200 hover:text-text dark:hover:bg-gray-800"
+                className="h-8 w-8 rounded-full p-0 hover:bg-zinc-200 hover:text-text dark:hover:bg-gray-800"
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
@@ -819,12 +827,12 @@ export default function FullChat({
                 disabled={
                   isLoading || (!input.trim() && selectedFiles.length === 0)
                 }
-                className="h-10 w-10 rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
+                className="h-8 w-8 rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 {isLoading ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <LoadingSpinner variant="light" size="sm" />
                 ) : (
-                  <Send className="h-4 w-4" />
+                  <ArrowUp className="h-4 w-4" />
                 )}
               </Button>
             </div>
