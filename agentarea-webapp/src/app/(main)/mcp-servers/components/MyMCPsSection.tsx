@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle, Clock, XCircle } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
@@ -8,30 +8,12 @@ import Table from "@/components/Table/Table";
 import { Badge } from "@/components/ui/badge";
 import { getMCPHealthStatus } from "@/lib/browser-api";
 import { MCPInstanceCard } from "./MCPCard";
-
-interface MCPInstance {
-  id: string;
-  name: string;
-  description?: string | null;
-  status: string;
-  endpoint_url?: string;
-  created_at: string;
-  server_spec_id?: string | null;
-  json_spec?: any;
-}
-
-interface HealthCheck {
-  service_name: string;
-  slug: string;
-  url: string;
-  healthy: boolean;
-  http_reachable: boolean;
-  response_time_ms: number;
-  error?: string;
-}
+import { MCPInstance, MCPServer, HealthCheck, HealthStatus } from "../types";
+import { MCP_CONSTANTS } from "../utils";
 
 interface MyMCPsSectionProps {
   mcpInstances: MCPInstance[];
+  mcpServers: MCPServer[];
   viewMode?: string;
   searchQuery?: string;
   hasNoData?: boolean;
@@ -39,6 +21,7 @@ interface MyMCPsSectionProps {
 
 export function MyMCPsSection({
   mcpInstances,
+  mcpServers,
   viewMode = "grid",
   searchQuery = "",
   hasNoData = false,
@@ -61,7 +44,10 @@ export function MyMCPsSection({
     };
 
     fetchHealthStatus();
-    const interval = setInterval(fetchHealthStatus, 60000);
+    const interval = setInterval(
+      fetchHealthStatus,
+      MCP_CONSTANTS.HEALTH_CHECK_INTERVAL_MS
+    );
     return () => clearInterval(interval);
   }, []);
 
@@ -89,9 +75,7 @@ export function MyMCPsSection({
   };
 
   // Get health status for instance
-  const getHealthStatus = (
-    instance: MCPInstance
-  ): "healthy" | "unhealthy" | "starting" | "unknown" => {
+  const getHealthStatus = (instance: MCPInstance): HealthStatus => {
     const healthCheck = getHealthCheck(instance.name);
 
     if (healthLoading) return "unknown";
@@ -204,12 +188,12 @@ export function MyMCPsSection({
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {mcpInstances.map((instance) => {
-        const healthStatus = getHealthStatus(instance);
+        const serverSpec = mcpServers.find((server) => server.id === instance.server_spec_id);
         return (
           <MCPInstanceCard
             key={instance.id}
             instance={instance}
-            healthStatus={healthStatus}
+            serverSpec={serverSpec}
           />
         );
       })}
