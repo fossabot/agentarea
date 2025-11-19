@@ -21,7 +21,7 @@ spec:
       serviceAccountName: {{ include "agentarea.serviceAccountName" . }}
       containers:
         - name: mcp-manager
-          image: "{{ .Values.global.image.registry }}{{ if .Values.global.image.registry }}/{{ end }}{{ .Values.mcpManager.image.repository }}:{{ .Values.mcpManager.image.tag }}"
+          image: "{{ .Values.global.image.registry }}{{ if .Values.global.image.registry }}/{{ end }}{{ .Values.mcpManager.image.repository }}:{{ default .Chart.AppVersion .Values.mcpManager.image.tag }}"
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- with .Values.mcpManager.securityContext }}
           securityContext:
@@ -32,38 +32,26 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
-            - name: LOG_LEVEL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "agentarea.fullname" . }}-mcp-manager-env
-                  key: LOG_LEVEL
-            - name: CORE_API_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "agentarea.fullname" . }}-mcp-manager-env
-                  key: CORE_API_URL
-            - name: MCP_PROXY_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "agentarea.fullname" . }}-mcp-manager-env
-                  key: MCP_PROXY_HOST
-            - name: REDIS_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "agentarea.fullname" . }}-mcp-manager-env
-                  key: REDIS_HOST
-            - name: REDIS_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "agentarea.fullname" . }}-mcp-manager-env
-                  key: REDIS_PORT
-            - name: REDIS_PASSWORD
+            {{- include "agentarea.database.envs" . | nindent 12 }}
+            {{- include "agentarea.redis.envs" . | nindent 12 }}
+            {{- include "agentarea.application.secrets.envs" . | nindent 12 }}
+            {{- include "agentarea.mcpManager.envs" . | nindent 12 }}
+            {{- if or .Values.mcpManager.envVars .Values.global.envVars }}
+            {{- range $k, $v := mergeOverwrite .Values.mcpManager.envVars .Values.global.envVars }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.mcpManager.secrets }}
+            {{- $secretName := ( .Values.mcpManager.secretsName | default (printf "%s-mcp-manager-secrets" .Release.Name) ) }}
+            {{- range $k, $v := .Values.mcpManager.secrets }}
+            - name: {{ $k }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.global.secrets.redis }}
-                  key: redis-password
-            - name: REDIS_URL
-              value: "redis://:$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
+                  name: {{ $secretName }}
+                  key: {{ $k }}
+            {{- end }}
+            {{- end }}
             {{- if .Values.mcpManager.extraEnv }}
             {{- toYaml .Values.mcpManager.extraEnv | nindent 12 }}
             {{- end }}
@@ -71,4 +59,37 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /run
+            - name: containers-storage
+              mountPath: /var/lib/containers/storage
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        - name: containers-storage
+          emptyDir: {}
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
 {{- end }}
