@@ -21,118 +21,61 @@
         "group": "Get Started",
         "icon": "rocket",
         "pages": [
-          {
-            "page": "welcome",
-            "icon": "home"
-          },
-          {
-            "page": "getting-started",
-            "icon": "play"
-          },
-          {
-            "page": "platform-overview",
-            "icon": "eye"
-          }
+          "welcome",
+          "getting-started",
+          "platform-overview"
         ]
       },
       {
         "group": "Core Concepts",
         "icon": "lightbulb",
         "pages": [
-          {
-            "page": "building-agents",
-            "icon": "bot"
-          },
-          {
-            "page": "agent-communication",
-            "icon": "network"
-          },
-          {
-            "page": "mcp-integration",
-            "icon": "plug"
-          }
+          "building-agents",
+          "agent-communication",
+          "mcp-integration"
         ]
       },
       {
         "group": "Examples",
         "icon": "play",
         "pages": [
-          {
-            "page": "examples",
-            "icon": "folder-open"
-          }
+          "examples"
         ]
       },
       {
         "group": "Deployment",
         "icon": "server",
         "pages": [
-          {
-            "page": "infrastructure",
-            "icon": "cpu"
-          },
-          {
-            "page": "deployment",
-            "icon": "upload"
-          },
-          {
-            "page": "secrets-management",
-            "icon": "key"
-          },
-          {
-            "page": "monitoring",
-            "icon": "activity"
-          }
+          "infrastructure",
+          "deployment",
+          "secrets-management",
+          "monitoring"
         ]
       },
       {
         "group": "API Reference",
         "icon": "code",
         "pages": [
-          {
-            "page": "api-reference",
-            "icon": "terminal"
-          }
+          "api-reference"
         ]
       },
       {
         "group": "Resources",
         "icon": "book",
         "pages": [
-          {
-            "page": "architecture",
-            "icon": "layers"
-          },
-          {
-            "page": "security",
-            "icon": "shield"
-          },
-          {
-            "page": "troubleshooting",
-            "icon": "help-circle"
-          }
+          "architecture",
+          "security",
+          "troubleshooting"
         ]
       },
       {
         "group": "Community",
         "icon": "users",
         "pages": [
-          {
-            "page": "contributing",
-            "icon": "git-pull-request"
-          },
-          {
-            "page": "community",
-            "icon": "heart"
-          },
-          {
-            "page": "roadmap",
-            "icon": "map"
-          },
-          {
-            "page": "changelog",
-            "icon": "clock"
-          }
+          "contributing",
+          "community",
+          "roadmap",
+          "changelog"
         ]
       }
     ]
