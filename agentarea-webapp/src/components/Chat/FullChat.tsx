@@ -2,18 +2,21 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, Paperclip, ArrowUp } from "lucide-react";
+import { Paperclip, ArrowUp } from "lucide-react";
 import { AttachmentCard } from "@/components/ui/attachment-card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { env } from "@/env";
 import { useSSE } from "@/hooks/useSSE";
+import { useMentions } from "@/hooks/useMentions";
 import { cn } from "@/lib/utils";
-import { AssistantMessage as AssistantMessageComponent } from "./componets/AssistantMessage";
+import { extractPlainText, formatTextForTextarea, restoreMentionIds } from "@/utils/mentions";
 import { UserMessage as UserMessageComponent } from "./componets/UserMessage";
 import { parseEventToMessage, shouldDisplayEvent } from "./EventParser";
 import { MessageComponentType, MessageRenderer } from "./MessageComponents";
+import { MentionMenu } from "./MentionMenu";
+import { BadgeSuggestions } from "./componets/BadgeSuggestions";
+import { ScrollToBottomButton } from "./componets/ScrollToBottomButton";
 
 interface UserChatMessage {
   id: string;
@@ -33,12 +36,15 @@ interface WelcomeMessage {
 
 type ChatMessage = UserChatMessage | WelcomeMessage | MessageComponentType;
 
+import type { BadgeSuggestion } from "./componets/BadgeSuggestions";
+
 interface FullChatProps {
   agent: {
     id: string;
     name: string;
     description?: string | null;
   };
+  startCentered?: boolean;
   taskId?: string;
   initialMessages?: ChatMessage[];
   onTaskCreated?: (taskId: string) => void;
@@ -47,10 +53,12 @@ interface FullChatProps {
   className?: string;
   height?: string;
   placeholder?: string;
+  badgeSuggestions?: BadgeSuggestion[];
 }
 
 export default function FullChat({
   agent,
+  startCentered = false,
   placeholder,
   taskId,
   initialMessages = [],
@@ -58,10 +66,12 @@ export default function FullChat({
   onTaskStarted,
   onTaskFinished,
   className,
+  badgeSuggestions,
 }: FullChatProps) {
   const t = useTranslations("Chat");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(""); // Stores @[agentId:agentName] format
+  const [inputDisplay, setInputDisplay] = useState(""); // Stores @agentName for display
   const [isLoading, setIsLoading] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(
     taskId || null
@@ -71,7 +81,66 @@ export default function FullChat({
   const [hasUserMessages, setHasUserMessages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const currentAssistantMessageRef = useRef<MessageComponentType | null>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
+
+  // Mention functionality
+  const {
+    showMentions,
+    mentionQuery,
+    mentionPosition,
+    filteredAgents,
+    selectedMentionIndex,
+    mentionMenuRef,
+    agents: mentionAgents, // Get agents list for ID restoration
+    handleInputChange: handleMentionInputChange,
+    handleAgentSelect,
+    handleKeyDown: handleMentionKeyDown,
+    setShowMentions,
+  } = useMentions({
+    textareaRef,
+    containerRef: cardContainerRef,
+    onMentionInsert: (newText, newCursorPosition) => {
+      setInput(newText);
+      const displayText = formatTextForTextarea(newText);
+      setInputDisplay(displayText);
+      
+      setTimeout(() => {
+        if (textareaRef.current) {
+          const displayCursorPos = formatTextForTextarea(newText.substring(0, newCursorPosition)).length;
+          textareaRef.current.setSelectionRange(displayCursorPos, displayCursorPos);
+          textareaRef.current.focus();
+        }
+      }, 0);
+    },
+  });
+
+
+  const handleBadgeClick = (text: string) => {
+    setInput(text);
+    setInputDisplay(text);
+    
+    // Focus textarea and set cursor to end after setting text
+    // Also trigger mention detection if text ends with @
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const length = text.length;
+        textareaRef.current.setSelectionRange(length, length);
+        
+        // Trigger mention detection if text ends with @
+        if (text.endsWith('@')) {
+          // Create a synthetic event to trigger mention detection
+          const syntheticEvent = {
+            target: {
+              value: text,
+              selectionStart: length,
+            },
+          } as React.ChangeEvent<HTMLTextAreaElement>;
+          handleMentionInputChange(syntheticEvent);
+        }
+      }
+    }, 0);
+  };
   const onTaskCreatedRef = useRef(onTaskCreated);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -460,7 +529,6 @@ export default function FullChat({
           break;
 
         case "error":
-          console.error("SSE error:", event.data);
           setIsLoading(false);
           break;
 
@@ -474,7 +542,6 @@ export default function FullChat({
 
   // SSE event handlers
   const handleSSEError = useCallback((error: Event) => {
-    console.error("SSE connection error:", error);
     setIsLoading(false);
   }, []);
 
@@ -500,9 +567,10 @@ export default function FullChat({
     fileInputRef.current?.click();
   };
 
-  // Handle input change with auto-resize
+  // Handle input change - combine mention detection with input update
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+    handleMentionInputChange(e);
   };
 
   // Initialize SSE connection
@@ -517,9 +585,15 @@ export default function FullChat({
     e.preventDefault();
     if ((!input.trim() && selectedFiles.length === 0) || isLoading) return;
 
+    // Keep the format with ID for display, but extract plain text for API
+    const plainContent = extractPlainText(input);
+    
+    // Restore mention IDs for any mentions without ID format
+    const finalContent = restoreMentionIds(input, mentionAgents);
+    
     const userMessage: UserChatMessage = {
       id: Date.now().toString(),
-      content: input,
+      content: finalContent,
       role: "user",
       timestamp: new Date().toISOString(),
       files: selectedFiles.length > 0 ? selectedFiles : undefined,
@@ -532,6 +606,7 @@ export default function FullChat({
       return newMessages;
     });
     setInput("");
+    setInputDisplay("");
     setSelectedFiles([]);
     setIsLoading(true);
 
@@ -549,7 +624,7 @@ export default function FullChat({
           Accept: "text/event-stream",
         },
         body: JSON.stringify({
-          description: userMessage.content,
+          description: plainContent,
           parameters: {
             context: {},
             task_type: "chat",
@@ -656,7 +731,6 @@ export default function FullChat({
         reader.releaseLock();
       }
     } catch (error) {
-      console.error("Failed to send message:", error);
       const errorMessage: WelcomeMessage = {
         id: (Date.now() + 1).toString(),
         content: `Sorry, I couldn't process your message. Error: ${error}`,
@@ -676,6 +750,8 @@ export default function FullChat({
         "mx-auto flex h-full w-full flex-col gap-0 overflow-hidden rounded-lg transition-all duration-700 ease-out",
         "transition-all duration-700 ease-out",
         "justify-between",
+        startCentered ? "justify-center" : "justify-between",
+        (startCentered && !hasUserMessages) ? "max-w-3xl mx-auto" : "",
         // hasUserMessages ? 'justify-between border bg-chatBackground' : 'justify-center')}>
         // className,
         // hasUserMessages
@@ -728,71 +804,81 @@ export default function FullChat({
                 />
               );
             }
-            // else {
-            //   // Assistant welcome message
-            //   return (
-            //     <AssistantMessageComponent
-            //       key={message.id}
-            //       id={message.id}
-            //       content={message.content}
-            //       timestamp={message.timestamp}
-            //       agent_id={message.agent_id}
-            //       agent_name={agent.name}
-            //     />
-            //   );
-            // }
           })}
           <div ref={messagesEndRef} className="aa-messages-end" />
         </div>
 
-        {/* Scroll to bottom button */}
-        <div
-          className={`absolute bottom-4 right-4 z-20 transition-opacity duration-200 ${isAtBottom ? "pointer-events-none opacity-0" : "opacity-100"}`}
-        >
-          <Button
-            onClick={() => {
-              // Принудительно скроллим к низу контейнера, а не всей страницы
-              if (messagesContainerRef.current) {
-                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-              }
-
-              // Проверяем позицию после скролла
-              requestAnimationFrame(() => {
-                const atBottom = checkIfAtBottom();
-                setIsAtBottom(atBottom);
-              });
-            }}
-            size="sm"
-            className="h-8 w-8 rounded-full bg-white text-text shadow-lg hover:text-white dark:bg-zinc-900 dark:text-zinc-200"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </div>
+        <ScrollToBottomButton
+          visible={!isAtBottom}
+          onScrollToBottom={() => {
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+            requestAnimationFrame(() => {
+              const atBottom = checkIfAtBottom();
+              setIsAtBottom(atBottom);
+            });
+          }}
+        />
       </div>
       <div
+        ref={cardContainerRef}
         className={cn(
           "card mx-auto w-full cursor-auto bg-white hover:shadow-none dark:bg-zinc-900",
-          "px-2 pb-2 pt-0",
-          // "transition-width transition-height duration-500 ease-out transition-border-none",
-          // hasUserMessages
-          //   ? "max-w-full rounded-t-none border-l-0 border-r-0"
-          //   : "w-full max-w-5xl"
+          "px-2 pb-2 pt-0 border-t",
+          "transition-[max-width] duration-700 ease-out",
+          (startCentered && !hasUserMessages) ? "max-w-3xl" : "",
         )}
+
       >
         <form
           onSubmit={sendMessage}
-          className="flex flex-col gap-2 transition-all duration-700 ease-out"
+          className="relative flex flex-col gap-2 transition-all duration-700 ease-out"
         >
           <Textarea
             ref={textareaRef}
-            value={input}
-            onChange={handleInputChange}
+            value={inputDisplay || formatTextForTextarea(input)}
+            onChange={(e) => {
+              const displayValue = e.target.value;
+              setInputDisplay(displayValue);
+              
+              // Convert display value back to storage format
+              const mentionsInInput = input.match(/@\[[^\]]+\]/g) || [];
+              
+              // Build replacement map: display format -> storage format
+              const replacementMap = new Map<string, string>();
+              mentionsInInput.forEach((mentionWithId) => {
+                const mentionDisplay = formatTextForTextarea(mentionWithId);
+                if (!replacementMap.has(mentionDisplay)) {
+                  replacementMap.set(mentionDisplay, mentionWithId);
+                }
+              });
+              
+              // Replace mentions in display value, going from longest to shortest
+              let newInput = displayValue;
+              const sortedReplacements = Array.from(replacementMap.entries())
+                .sort((a, b) => b[0].length - a[0].length);
+              
+              sortedReplacements.forEach(([display, storage]) => {
+                const escaped = display.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                newInput = newInput.replace(new RegExp(escaped, 'g'), storage);
+              });
+              
+              setInput(newInput);
+              handleMentionInputChange(e);
+            }}
             placeholder={t("writeNewTaskFor", { agentName: agent.name })}
             disabled={isLoading}
-            className="min-h-auto h-auto resize-none border-none pb-0 pr-12 pt-3 duration-200"
+            className="min-h-auto h-auto resize-none border-none pb-0 pr-12 pt-3 transition-all duration-700 ease-out"
             rows={3}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              // Handle mention menu navigation first
+              if (handleMentionKeyDown(e)) {
+                return;
+              }
+              
+              // Handle message sending
+              if (e.key === "Enter" && !e.shiftKey && !showMentions) {
                 e.preventDefault();
                 sendMessage(e);
               }
@@ -838,6 +924,15 @@ export default function FullChat({
             </div>
           </div>
         </form>
+        {/* Mention menu */}
+        <MentionMenu
+          show={showMentions}
+          agents={filteredAgents}
+          position={mentionPosition}
+          selectedIndex={selectedMentionIndex}
+          menuRef={mentionMenuRef}
+          onAgentSelect={handleAgentSelect}
+        />
         {/* Hidden file input */}
         <input
           ref={fileInputRef}
@@ -848,6 +943,13 @@ export default function FullChat({
           accept="*/*"
         />
       </div>
+      {startCentered && (
+        <BadgeSuggestions
+          suggestions={badgeSuggestions || []}
+          onBadgeClick={handleBadgeClick}
+          visible={!hasUserMessages}
+        />
+      )}
     </div>
   );
 }
