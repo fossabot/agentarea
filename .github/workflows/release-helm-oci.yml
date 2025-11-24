@@ -32,6 +32,16 @@ jobs:
           sed -i -E "s/^appVersion: .*/appVersion: \"${VERSION}\"/" charts/agentarea/Chart.yaml
           echo "Updated Chart.yaml:" && grep -E '^(version|appVersion):' charts/agentarea/Chart.yaml
 
+      - name: Set dev version for manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          VERSION="0.0.0-dev.${SHORT_SHA}"
+          echo "Using dev version: $VERSION"
+          sed -i -E "s/^version: .*/version: ${VERSION}/" charts/agentarea/Chart.yaml
+          sed -i -E "s/^appVersion: .*/appVersion: \"${VERSION}\"/" charts/agentarea/Chart.yaml
+          echo "Updated Chart.yaml:" && grep -E '^(version|appVersion):' charts/agentarea/Chart.yaml
+
       - name: Add repositories
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -56,6 +66,22 @@ jobs:
           mkdir -p dist
           helm package charts/agentarea --destination dist
           ls -la dist
+
+      - name: Check if version already exists
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          CHART_NAME=agentarea
+          VERSION=$(grep '^version:' charts/agentarea/Chart.yaml | awk '{print $2}')
+          echo "Checking if version $VERSION already exists..."
+
+          # Try to pull the chart - if it succeeds, version exists
+          if helm pull oci://ghcr.io/${OWNER}/${CHART_NAME}/${CHART_NAME} --version "$VERSION" 2>/dev/null; then
+            echo "::error::Chart version $VERSION already exists in OCI registry. Please bump the version."
+            exit 1
+          else
+            echo "Version $VERSION does not exist, proceeding with push."
+          fi
 
       - name: Push chart to GHCR OCI
         env:
