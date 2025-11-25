@@ -32,12 +32,24 @@ jobs:
           sed -i -E "s/^appVersion: .*/appVersion: \"${VERSION}\"/" charts/agentarea/Chart.yaml
           echo "Updated Chart.yaml:" && grep -E '^(version|appVersion):' charts/agentarea/Chart.yaml
 
-      - name: Set dev version for manual dispatch
+      - name: Set version for manual dispatch
         if: github.event_name == 'workflow_dispatch'
         run: |
+          # Try to get the latest version tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           SHORT_SHA="${GITHUB_SHA::7}"
-          VERSION="0.0.0-dev.${SHORT_SHA}"
-          echo "Using dev version: $VERSION"
+
+          if [ -n "$LATEST_TAG" ]; then
+            # Use latest tag without 'v' prefix, append -dev suffix
+            BASE_VERSION="${LATEST_TAG#v}"
+            VERSION="${BASE_VERSION}-dev.${SHORT_SHA}"
+            echo "Using dev version based on latest tag: $VERSION"
+          else
+            # Fallback to 0.0.0-dev if no tags exist
+            VERSION="0.0.0-dev.${SHORT_SHA}"
+            echo "No tags found, using fallback dev version: $VERSION"
+          fi
+
           sed -i -E "s/^version: .*/version: ${VERSION}/" charts/agentarea/Chart.yaml
           sed -i -E "s/^appVersion: .*/appVersion: \"${VERSION}\"/" charts/agentarea/Chart.yaml
           echo "Updated Chart.yaml:" && grep -E '^(version|appVersion):' charts/agentarea/Chart.yaml
