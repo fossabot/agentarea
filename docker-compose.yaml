@@ -271,7 +271,7 @@ services:
       start_period: 120s
 
   temporal-admin-tools:
-    image: temporalio/admin-tools:1.29.1
+    image: temporalio/admin-tools:1.28
     container_name: agentarea-temporal-admin-tools
     depends_on:
       - temporal
