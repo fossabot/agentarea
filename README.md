@@ -10,6 +10,7 @@
 [![Documentation](https://img.shields.io/badge/docs-mintlify-green.svg)](https://docs.agentarea.ai)
 [![Discord](https://img.shields.io/discord/1375237948982821005?color=5865F2&label=discord&logo=discord&logoColor=white)](https://discord.gg/5tduPwheYQ)
 [![GitHub Stars](https://img.shields.io/github/stars/agentarea/agentarea?style=social)](https://github.com/agentarea/agentarea/stargazers)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fagentarea%2Fagentarea.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fagentarea%2Fagentarea?ref=badge_shield)
 
 [📖 Documentation](https://docs.agentarea.ai) •
 [🚀 Quick Start](#-quick-start) •
@@ -158,6 +159,9 @@ Join our community of AI developers:
 ## 📄 License
 
 This project is licensed under the Eclipse Public License v2.0 (EPLv2) - see the [LICENSE](LICENSE) file for details.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fagentarea%2Fagentarea.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fagentarea%2Fagentarea?ref=badge_large)
 
 ## 🙏 Acknowledgments
 
