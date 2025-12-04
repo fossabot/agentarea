@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   app:
-    image: agentarea-backend:latest
+    image: agentarea/agentarea-api:${VERSION:-latest}
     container_name: agentarea-backend
     build:
       context: agentarea-platform
@@ -62,7 +62,7 @@ services:
     working_dir: /app/apps/api
 
   app_migrations:
-    image: agentarea-backend:latest
+    image: agentarea/agentarea-api:${VERSION:-latest}
     build:
       context: agentarea-platform
       dockerfile: apps/api/Dockerfile
@@ -92,7 +92,7 @@ services:
 
   # Bootstrap Database Creation - creates all required databases
   bootstrap_db:
-    image: agentarea-bootstrap:latest
+    image: agentarea/agentarea-bootstrap:${VERSION:-latest}
     build:
       context: agentarea-bootstrap
       dockerfile: Dockerfile
@@ -113,7 +113,7 @@ services:
 
   # Bootstrap Application Setup - runs after migrations
   bootstrap:
-    image: agentarea-bootstrap:latest
+    image: agentarea/agentarea-bootstrap:${VERSION:-latest}
     build:
       context: agentarea-bootstrap
       dockerfile: Dockerfile
@@ -144,6 +144,40 @@ services:
         condition: service_completed_successfully
       # infisical:
       #   condition: service_started
+
+  # Frontend service - Next.js dev mode
+  # Pre-requisite: run `pnpm install` in agentarea-webapp/ before starting
+  # frontend:
+  #   image: agentarea/agentarea-frontend:${VERSION:-latest}
+  #   # image: node:22
+  #   # build:
+  #   #   context: agentarea-webapp
+  #   #   dockerfile: Dockerfile
+  #   container_name: agentarea-frontend
+  #   ports:
+  #     - "3000:3000"
+  #   restart: unless-stopped
+  #   working_dir: /app
+  #   environment:
+  #     # Node environment
+  #     - CI=true
+  #     - NODE_ENV=production
+  #     - NEXT_TELEMETRY_DISABLED=1
+  #     # API Configuration
+  #     - API_URL=${API_URL:-http://app:8000}
+  #     - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+
+  #     # Ory Kratos Configuration
+  #     - ORY_ADMIN_URL=${ORY_ADMIN_URL:-http://kratos:4434}
+  #     - ORY_SDK_URL=${ORY_SDK_URL:-http://kratos:4433}
+  #     - NEXT_PUBLIC_ORY_SDK_URL=${NEXT_PUBLIC_ORY_SDK_URL:-http://localhost:4433}
+  #   volumes:
+  #     # Mount entire webapp directory (includes pre-installed node_modules from host)
+  #     - ./agentarea-webapp:/app
+  #   networks:
+  #     - default
+  #     - auth-network
+  #   command: sh -c "npx pnpm dev"
 
   minio:
     image: minio/minio:latest
@@ -195,9 +229,9 @@ services:
     command: ["redis-server", "--save", "", "--appendonly", "no"] # Disable persistence for dev
 
   mcp-manager:
-    image: mcp-manager:latest
+    image: agentarea/agentarea-mcp-manager:${VERSION:-latest}
     build:
-      context: agentarea-mcp-manager/go-mcp-manager
+      context: agentarea-mcp-manager
       dockerfile: Dockerfile.dev
       target: development
       platforms:
@@ -207,15 +241,15 @@ services:
     restart: unless-stopped
     privileged: true
     ports:
-      - "7999:80" # Traefik proxy (unified entry point)
+      - "7999:80" # Internal proxy (unified entry point)
     tmpfs:
       - /tmp
       - /run
     volumes:
       - mcp_containers:/var/lib/containers/storage
-      - ./agentarea-mcp-manager/go-mcp-manager:/app:rw # Mount source code for live reload
-      - ./agentarea-mcp-manager/traefik:/etc/traefik:rw # Traefik configuration
+      - ./agentarea-mcp-manager:/app:rw # Mount source code for live reload
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - ./data/mcp_providers.yaml:/app/data/mcp_providers.yaml
     networks:
       - mcp-network
       - default
@@ -273,7 +307,7 @@ services:
       start_period: 120s
 
   temporal-admin-tools:
-    image: temporalio/admin-tools:1.29.1
+    image: temporalio/admin-tools:1.28
     container_name: agentarea-temporal-admin-tools
     depends_on:
       - temporal
@@ -300,6 +334,7 @@ services:
 
   # AgentArea Worker Service
   agentarea-worker:
+    image: agentarea/agentarea-worker:${VERSION:-latest}
     build:
       context: agentarea-platform
       dockerfile: apps/worker/Dockerfile

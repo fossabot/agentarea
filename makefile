@@ -50,13 +50,13 @@ agentarea-platform-sync: ## Sync platform dependencies
 ##@ Development - Go MCP Manager
 
 build-go: ## Build Go MCP manager
-	cd agentarea-mcp-manager/go-mcp-manager && go build ./...
+	cd agentarea-mcp-manager && go build ./...
 
 lint-go: ## Lint Go code
-	cd agentarea-mcp-manager/go-mcp-manager && golangci-lint run --timeout=5m
+	cd agentarea-mcp-manager && golangci-lint run --timeout=5m
 
 test-go: ## Run Go tests
-	cd agentarea-mcp-manager/go-mcp-manager && go test ./...
+	cd agentarea-mcp-manager && go test ./...
 
 ##@ Docker - Development Environment
 
@@ -79,6 +79,9 @@ down-clean: ## Stop and clean development environment (removes volumes)
 	docker compose -f docker-compose.dev.yaml down -v
 
 restart: ## Restart development environment
+	docker compose restart
+
+restart-dev: ## Restart development environment
 	docker compose -f docker-compose.dev.yaml restart
 
 logs: ## Follow logs from all services

@@ -22,8 +22,23 @@ def quote_if_needed(val: str) -> str:
     if val is None:
         return '""'
     s = str(val)
+    
+    # If the value is a Helm template expression starting with {{ and ending with }},
+    # we want to preserve it exactly as is, but ensure the result is quoted for YAML safety if needed.
+    # However, the user specifically wants `DBNAME: {{ .Values... | quote }}` structure for some fields.
+    # The previous manual fix used `quote` pipeline within the template.
+    
     if s.startswith('"') and s.endswith('"'):
         return s
+    
+    # Check if it looks like a Helm template
+    if "{{" in s and "}}" in s:
+        # If it's a simple template substitution, wrap in quotes to be safe string
+        # unless it already has the quote pipeline
+        if "| quote" in s:
+             return s
+        return f'"{s}"'
+        
     return f'"{s}"'
 
 
@@ -36,8 +51,12 @@ def render_config_vars(group_name: str, cfg: dict) -> str:
     return "\n".join(lines)
 
 
+def _sanitize_group(name: str) -> str:
+    return ''.join(c.lower() if c.isalnum() else '-' for c in name)
+
+
 def render_envs(group_name: str, cfg: dict) -> str:
-    cm = '{{ include "agentarea.fullname" . }}-env'
+    cm = f"{{{{ include \"agentarea.fullname\" . }}}}-env-{_sanitize_group(group_name)}"
     lines = []
     lines.append(f'{{{{- define "agentarea.{group_name}.envs" }}}}')
     for k in (cfg.get("configVars") or {}).keys():
@@ -48,21 +67,6 @@ def render_envs(group_name: str, cfg: dict) -> str:
             f"      name: {cm}",
             f"      key: {k}",
         ])
-    for sec in (cfg.get("secrets") or []):
-        name = sec.get("name")
-        if "value" in sec and sec["value"] is not None:
-            lines.extend([
-                f"- name: {name}",
-                f"  value: {sec['value']}",
-            ])
-        else:
-            lines.extend([
-                f"- name: {name}",
-                "  valueFrom:",
-                "    secretKeyRef:",
-                f"      name: {quote_if_needed(sec.get('secretName'))}",
-                f"      key: {sec.get('key')}",
-            ])
     for extra in (cfg.get("envExtras") or []):
         lines.extend([
             f"- name: {extra.get('name')}",
